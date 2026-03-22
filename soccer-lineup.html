@@ -481,31 +481,34 @@ window._startSync = function(onRemoteUpdate) {
 
 <script>
 // ── FIREBASE SYNC ─────────────────────────────────────────────────────────────
-let _isSyncing = false; // prevent echo loop when we receive our own save
+let _lastSaveTime = 0;
 
 function saveToFirebase() {
   if (!window._doc || !window._setDoc) return;
+  _lastSaveTime = Date.now();
   const data = { players, goals, games, curGame };
-  window._setDoc(window._doc, data).catch(err => console.warn('Save failed:', err));
+  window._setDoc(window._doc, data)
+    .then(() => showSyncStatus('saved'))
+    .catch(() => showSyncStatus('error'));
 }
 
 function loadFromFirebase(data) {
-  if (_isSyncing) return;
-  _isSyncing = true;
-  try {
-    if (data.players) players = data.players;
-    if (data.goals)   goals   = data.goals;
-    if (data.games)   games   = data.games.map(g => ({
-      ...g,
-      rotations: g.rotations.map(r => {
-        ensureShape(r); return r;
-      })
-    }));
-    if (typeof data.curGame === 'number') curGame = data.curGame;
-    renderAll();
-  } finally {
-    setTimeout(() => { _isSyncing = false; }, 500);
-  }
+  // If we just saved within the last 2 seconds, skip (it's our own echo)
+  if (Date.now() - _lastSaveTime < 2000) return;
+  if (data.players) players = data.players;
+  if (data.goals)   goals   = data.goals;
+  if (data.games)   games   = data.games.map(g => ({
+    ...g,
+    opponentScore: g.opponentScore || 0,
+    completed: g.completed || false,
+    rotations: g.rotations.map(r => { ensureShape(r); return r; })
+  }));
+  if (typeof data.curGame === 'number') curGame = data.curGame;
+  // Suppress save triggered by renderAll during load
+  const savedLastSave = _lastSaveTime;
+  _lastSaveTime = Date.now();
+  renderAll();
+  _lastSaveTime = savedLastSave;
 }
 
 // ── SYNC STATUS ───────────────────────────────────────────────────────────────
@@ -1289,34 +1292,40 @@ function updateSnapDots() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Start Firebase listener — loads remote state on first connect
-// and keeps all devices in sync in real time
+// Render immediately with defaults so the UI isn't blank
+renderAll();
+
+// Wire up scroll listener for dots after render
+document.getElementById('rotationsContainer').addEventListener('scroll', updateSnapDots);
+window.addEventListener('resize', () => { renderSnapDots(); updateSnapDots(); });
+
+// Wait for Firebase module to load, then start sync
 let _initialLoad = true;
-if (window._startSync) {
+function startFirebaseSync() {
+  if (!window._startSync) {
+    // Module not ready yet, retry in 100ms
+    setTimeout(startFirebaseSync, 100);
+    return;
+  }
   window._startSync(data => {
     if (_initialLoad) {
       _initialLoad = false;
-      // Only auto-generate if there's no saved data
       const hasData = data.games && data.games.some(g =>
         g.rotations && g.rotations.some(r =>
           ['def','mid','fwd'].some(p => r[p] && r[p].some(Boolean))
         )
       );
-      loadFromFirebase(data);
-      if (!hasData) autoGenerate();
+      if (hasData) {
+        loadFromFirebase(data);
+      } else {
+        autoGenerate();
+      }
     } else {
       loadFromFirebase(data);
     }
   });
-} else {
-  // Firebase not loaded yet — render with defaults
-  renderAll();
-  autoGenerate();
 }
-
-// Wire up scroll listener for dots after render
-document.getElementById('rotationsContainer').addEventListener('scroll', updateSnapDots);
-window.addEventListener('resize', () => { renderSnapDots(); updateSnapDots(); });
+startFirebaseSync();
 </script>
 </body>
 </html>
