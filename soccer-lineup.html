@@ -523,14 +523,25 @@ function loadFromFirebase(data) {
   // Skip if we just saved (echo prevention), but never skip on initial load (_lastSaveTime === 0)
   if (_lastSaveTime !== 0 && Date.now() - _lastSaveTime < 2000) return;
   if (data.players) players = data.players.map(p =>
-    typeof p === 'string' ? { name: p, active: true } : p
+    typeof p === 'string' ? { name: p, active: true } : { name: p.name || String(p), active: p.active !== false }
   );
   if (data.goals)   goals   = data.goals;
   if (data.games)   games   = data.games.map(g => ({
     ...g,
     opponentScore: g.opponentScore || 0,
     completed: g.completed || false,
-    rotations: g.rotations.map(r => { ensureShape(r); return r; })
+    rotations: g.rotations.map(r => {
+      ensureShape(r);
+      // Sanitize — ensure all slot values and bench are plain strings
+      POSITIONS.forEach(pos => {
+        r[pos] = r[pos].map(p => {
+          if (!p) return null;
+          return typeof p === 'string' ? p : (p.name || null);
+        });
+      });
+      r.bench = r.bench.map(p => typeof p === 'string' ? p : (p.name || null)).filter(Boolean);
+      return r;
+    })
   }));
   if (typeof data.curGame === 'number') curGame = data.curGame;
   // Suppress save triggered by renderAll during load
