@@ -567,12 +567,15 @@ function totalGoals(name) {
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
 function renderAll() {
   renderPlayers(); renderGameTabs(); renderRotations(); renderStats(); renderSeasonRecord();
+}
+
+function renderAndSave() {
+  renderAll();
   // Debounced save to Firebase
   clearTimeout(window._saveTimer);
   window._saveTimer = setTimeout(() => {
     showSyncStatus('saving');
     saveToFirebase();
-    showSyncStatus('saved');
   }, 600);
 }
 
@@ -598,7 +601,7 @@ function addPlayer() {
   if (!n || players.includes(n)) { inp.focus(); return; }
   players.push(n);
   inp.value = '';
-  renderAll();
+  renderAndSave();
 }
 
 function removePlayer(i) {
@@ -609,7 +612,7 @@ function removePlayer(i) {
     POSITIONS.forEach(pos => { rot[pos] = rot[pos].map(p => p===name?null:p); });
     rot.bench = rot.bench.filter(p => p!==name);
   }));
-  renderAll();
+  renderAndSave();
 }
 
 function renamePlayer(i, newName) {
@@ -621,7 +624,7 @@ function renamePlayer(i, newName) {
     POSITIONS.forEach(pos => { rot[pos] = rot[pos].map(p => p===old?n:p); });
     rot.bench = rot.bench.map(p => p===old?n:p);
   }));
-  renderAll();
+  renderAndSave();
 }
 
 // ── GAME TABS ─────────────────────────────────────────────────────────────────
@@ -632,7 +635,7 @@ function renderGameTabs() {
     const btn = document.createElement('button');
     btn.className = 'game-tab' + (i===curGame?' active':'');
     btn.textContent = g.name;
-    btn.onclick = () => { curGame = i; renderAll(); };
+    btn.onclick = () => { curGame = i; renderAndSave(); };
     el.appendChild(btn);
   });
   const add = document.createElement('button');
@@ -670,12 +673,12 @@ function confirmNewGame() {
   games.push({ name:n, rotations:emptyRotations(), opponentScore: 0, completed: false });
   curGame = games.length-1;
   closeModal('newGameModal');
-  renderAll();
+  renderAndSave();
 }
 function clearGame() {
   if (!confirm('Clear all rotations in this game? Locks and played status will be reset.')) return;
   games[curGame].rotations = emptyRotations();
-  renderAll();
+  renderAndSave();
 }
 
 // ── GOALS MODAL ───────────────────────────────────────────────────────────────
@@ -839,7 +842,7 @@ function renderRotations() {
       <div class="toggle-track"></div>`;
     toggle.querySelector('input').addEventListener('change', e => {
       rot.played = e.target.checked;
-      renderAll();
+      renderAndSave();
     });
     hdr.appendChild(toggle);
     card.appendChild(hdr);
@@ -898,7 +901,7 @@ function makeSlot(playerName, pos, rIdx, sIdx, locked, isPlayed) {
     lockBtn.onclick = e => {
       e.stopPropagation();
       games[curGame].rotations[rIdx].locked[pos][sIdx] = !locked;
-      renderAll();
+      renderAndSave();
     };
 
     const nameEl = document.createElement('span');
@@ -915,7 +918,7 @@ function makeSlot(playerName, pos, rIdx, sIdx, locked, isPlayed) {
     swapBtn.onclick = e => {
       e.stopPropagation();
       slotMenuSel = isMenuOpen ? null : { rIdx, pos, sIdx };
-      renderAll();
+      renderAndSave();
     };
 
     inner.appendChild(lockBtn);
@@ -943,7 +946,7 @@ function makeSlot(playerName, pos, rIdx, sIdx, locked, isPlayed) {
             rot[tPos][tIdx] = playerName;
             rot[pos][sIdx] = tName;
             slotMenuSel = null;
-            renderAll();
+            renderAndSave();
           });
           dropdown.appendChild(opt);
         });
@@ -976,7 +979,7 @@ function makeSlot(playerName, pos, rIdx, sIdx, locked, isPlayed) {
       rot.bench = rot.bench.filter(p => p !== benchName);
       if (fieldName && !rot.locked[pos][sIdx]) rot.bench.push(fieldName);
       swapSel = null;
-      renderAll();
+      renderAndSave();
     });
   }
 
@@ -986,7 +989,7 @@ function makeSlot(playerName, pos, rIdx, sIdx, locked, isPlayed) {
     slot.addEventListener('drop', e => {
       e.preventDefault(); slot.classList.remove('drag-target');
       handleDrop({ type:'slot', rIdx, pos, sIdx });
-      renderAll();
+      renderAndSave();
     });
   }
   return slot;
@@ -1020,7 +1023,7 @@ function makeBench(rIdx, benchNames, isPlayed) {
         } else {
           swapSel = { rIdx, playerName:p };
         }
-        renderAll();
+        renderAndSave();
       });
     }
     if (!isPlayed) {
@@ -1029,7 +1032,7 @@ function makeBench(rIdx, benchNames, isPlayed) {
       s.addEventListener('drop', e => {
         e.preventDefault(); s.classList.remove('drag-target');
         handleDrop({ type:'bench', rIdx });
-        renderAll();
+        renderAndSave();
       });
     }
     div.appendChild(s);
@@ -1158,7 +1161,7 @@ function autoGenerate() {
     });
   });
 
-  renderAll();
+  renderAndSave();
 }
 
 function shuffleArr(arr) {
@@ -1239,7 +1242,7 @@ function updateNotice(game) {
 document.addEventListener('keydown', e => {
   if (e.key==='Escape') {
     closeModal('newGameModal'); closeModal('goalsModal');
-    if (swapSel) { swapSel = null; renderAll(); }
+    if (swapSel) { swapSel = null; renderAndSave(); }
   }
 });
 
@@ -1247,7 +1250,7 @@ document.addEventListener('click', e => {
   if (!swapSel) return;
   if (!e.target.closest('.bench-slot') && !e.target.closest('.swap-target')) {
     swapSel = null;
-    renderAll();
+    renderAndSave();
   }
 });
 
@@ -1255,7 +1258,7 @@ document.addEventListener('click', e => {
   if (!slotMenuSel) return;
   if (!e.target.closest('.swap-btn') && !e.target.closest('.slot-dropdown')) {
     slotMenuSel = null;
-    renderAll();
+    renderAndSave();
   }
 }, true);
 
@@ -1292,14 +1295,11 @@ function updateSnapDots() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-// Render immediately with defaults so the UI isn't blank
-renderAll();
-
-// Wire up scroll listener for dots after render
+// Wire up scroll listeners
 document.getElementById('rotationsContainer').addEventListener('scroll', updateSnapDots);
 window.addEventListener('resize', () => { renderSnapDots(); updateSnapDots(); });
 
-// Wait for Firebase module to load, then start sync
+// Wait for Firebase — do NOT render or save until we know what's in the database
 let _initialLoad = true;
 function startFirebaseSync() {
   if (!window._startSync) {
@@ -1309,17 +1309,17 @@ function startFirebaseSync() {
   window._startSync(data => {
     if (_initialLoad) {
       _initialLoad = false;
-      // Always load from Firebase on first connect — this is the authoritative state
-      const hasData = data.games && data.games.some(g =>
+      const hasData = data && data.games && data.games.some(g =>
         g.rotations && g.rotations.some(r =>
           ['def','mid','fwd'].some(p => r[p] && r[p].some(Boolean))
         )
       );
       if (hasData) {
-        // Force load by resetting timestamp so echo check doesn't block it
         _lastSaveTime = 0;
         loadFromFirebase(data);
       } else {
+        // Nothing saved yet — render defaults and save them
+        renderAndSave();
         autoGenerate();
       }
     } else {
