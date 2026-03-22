@@ -67,6 +67,12 @@
   .player-list { display: flex; flex-direction: column; gap: 5px; }
   .player-chip { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; transition: all 0.15s; user-select: none; }
   .player-chip:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); }
+  .player-chip.inactive { opacity: 0.45; }
+  .player-chip.inactive .player-name-input { text-decoration: line-through; }
+  .active-toggle { background: none; border: none; cursor: pointer; padding: 0 4px; font-size: 1rem; line-height: 1; transition: color 0.15s; flex-shrink: 0; color: var(--gray); }
+  .active-toggle.is-active { color: var(--green-light); }
+  .active-toggle:hover { opacity: 0.8; }
+  .stat-row.inactive { opacity: 0.4; }
   .player-num { width: 20px; height: 20px; background: var(--green-dark); border-radius: 50%; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; color: var(--gold); flex-shrink: 0; }
   .player-name-input { background: transparent; border: none; color: var(--white); font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; width: 100%; outline: none; }
   .player-name-input::placeholder { color: var(--gray); }
@@ -270,6 +276,21 @@
   .seg-btn.active { background: var(--green); color: var(--white); }
   .seg-btn:hover:not(.active) { color: var(--white); }
 
+  /* LOADING OVERLAY */
+  .loader-ball { font-size: 2.5rem; color: var(--gold); animation: spin 1.2s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .loader-text { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray); }
+
+  /* EMPTY STATES */
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px 16px; text-align: center; }
+  .empty-state i { font-size: 1.8rem; color: var(--gray); opacity: 0.5; }
+  .empty-state p { font-size: 0.78rem; color: var(--gray); line-height: 1.5; }
+  .empty-state strong { color: var(--white); font-weight: 600; display: block; margin-bottom: 2px; font-size: 0.85rem; }
+
+  /* FADE IN */
+  .fade-in { animation: fadeIn 0.35s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
   @media print {
     header .header-controls, .sidebar, .game-tabs, .notice, .sticky-footer { display: none !important; }
     .main { grid-template-columns: 1fr; }
@@ -326,6 +347,12 @@
 </style>
 </head>
 <body>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="position:fixed;inset:0;z-index:999;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.4s;">
+  <div class="loader-ball"><i class="ti ti-ball-football"></i></div>
+  <div class="loader-text">Connecting…</div>
+</div>
 
 <header>
   <div class="header-left">
@@ -495,7 +522,9 @@ function saveToFirebase() {
 function loadFromFirebase(data) {
   // Skip if we just saved (echo prevention), but never skip on initial load (_lastSaveTime === 0)
   if (_lastSaveTime !== 0 && Date.now() - _lastSaveTime < 2000) return;
-  if (data.players) players = data.players;
+  if (data.players) players = data.players.map(p =>
+    typeof p === 'string' ? { name: p, active: true } : p
+  );
   if (data.goals)   goals   = data.goals;
   if (data.games)   games   = data.games.map(g => ({
     ...g,
@@ -520,6 +549,13 @@ function showSyncStatus(state) {
   else if (state === 'error') { el.textContent = '⚠ Offline'; el.style.color = '#f97b8b'; }
 }
 
+function hideLoadingOverlay() {
+  const el = document.getElementById('loadingOverlay');
+  if (!el) return;
+  el.style.opacity = '0';
+  setTimeout(() => el.remove(), 400);
+}
+
 
 const POSITIONS   = ['def','mid','fwd'];
 const POS_LABELS  = { def:'Defenders', mid:'Midfielders', fwd:'Forwards' };
@@ -529,15 +565,19 @@ const NUM_ROT     = 6;
 const FIELD_SIZE  = 6;
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
-let players = ['Alex','Jordan','Sam','Riley','Casey','Morgan','Taylor','Quinn','Drew','Avery','Blake'];
+let players = [
+  'Alex','Jordan','Sam','Riley','Casey','Morgan','Taylor','Quinn','Drew','Avery','Blake'
+].map(name => ({ name, active: true }));
 let goals   = {};   // { playerName: { gameIdx: count } }
 let games   = [{ name:'Game 1', rotations: emptyRotations(), opponentScore: 0, completed: false }];
 let curGame = 0;
 let drag    = null;
 let swapSel = null;
-let slotMenuSel = null; // { rIdx, pos, sIdx } — slot swap dropdown open on mobile
+let slotMenuSel = null;
 
-let statsScope = 'game'; // 'game' | 'season'
+// Helper — only active player names
+function activePlayers() { return players.filter(p => p.active).map(p => p.name); }
+let statsScope = 'game';
 function emptyRotations() {
   return Array.from({ length: NUM_ROT }, () => ({
     def: [null,null], mid: [null,null], fwd: [null,null],
@@ -583,49 +623,71 @@ function renderAndSave() {
 function renderPlayers() {
   const list = document.getElementById('playerList');
   list.innerHTML = '';
-  players.forEach((p,i) => {
+  if (players.length === 0) {
+    list.innerHTML = `<div class="empty-state"><i class="ti ti-users"></i><p><strong>No players yet</strong>Add your first player below</p></div>`;
+    return;
+  }
+  players.forEach((p, i) => {
     const chip = document.createElement('div');
-    chip.className = 'player-chip';
+    chip.className = 'player-chip' + (p.active ? '' : ' inactive');
     chip.innerHTML = `
       <div class="player-num">${i+1}</div>
-      <input class="player-name-input" value="${p}" maxlength="20"
+      <input class="player-name-input" value="${p.name}" maxlength="20"
         onchange="renamePlayer(${i},this.value)" onclick="event.stopPropagation()"/>
+      <button class="active-toggle ${p.active ? 'is-active' : ''}" onclick="toggleActive(${i})" title="${p.active ? 'Mark inactive' : 'Mark active'}">
+        <i class="ti ${p.active ? 'ti-circle-check' : 'ti-circle-x'}"></i>
+      </button>
       <button class="btn-danger" onclick="removePlayer(${i})"><i class="ti ti-x"></i></button>`;
     list.appendChild(chip);
   });
 }
 
+
 function addPlayer() {
   const inp = document.getElementById('newPlayerName');
   const n = inp.value.trim();
-  if (!n || players.includes(n)) { inp.focus(); return; }
-  players.push(n);
+  if (!n || players.some(p => p.name === n)) { inp.focus(); return; }
+  players.push({ name: n, active: true });
   inp.value = '';
   renderAndSave();
 }
 
 function removePlayer(i) {
-  const name = players[i];
-  players.splice(i,1);
+  const name = players[i].name;
+  const hasHistory = games.some(g =>
+    g.completed && g.rotations.some(r =>
+      POSITIONS.some(pos => r[pos].includes(name))
+    )
+  );
+  if (hasHistory) {
+    if (!confirm(`${name} has played in completed games. Their stats will be removed. Delete anyway?`)) return;
+  }
+  players.splice(i, 1);
   games.forEach(g => g.rotations.forEach(rot => {
     ensureShape(rot);
-    POSITIONS.forEach(pos => { rot[pos] = rot[pos].map(p => p===name?null:p); });
-    rot.bench = rot.bench.filter(p => p!==name);
+    POSITIONS.forEach(pos => { rot[pos] = rot[pos].map(p => p === name ? null : p); });
+    rot.bench = rot.bench.filter(p => p !== name);
   }));
   renderAndSave();
 }
 
+function toggleActive(i) {
+  players[i].active = !players[i].active;
+  renderAndSave();
+}
+
 function renamePlayer(i, newName) {
-  const old = players[i], n = newName.trim();
-  if (!n || players.includes(n)) return;
-  players[i] = n;
+  const old = players[i].name, n = newName.trim();
+  if (!n || players.some(p => p.name === n)) return;
+  players[i].name = n;
   if (goals[old]) { goals[n] = goals[old]; delete goals[old]; }
   games.forEach(g => g.rotations.forEach(rot => {
-    POSITIONS.forEach(pos => { rot[pos] = rot[pos].map(p => p===old?n:p); });
-    rot.bench = rot.bench.map(p => p===old?n:p);
+    POSITIONS.forEach(pos => { rot[pos] = rot[pos].map(p => p === old ? n : p); });
+    rot.bench = rot.bench.map(p => p === old ? n : p);
   }));
   renderAndSave();
 }
+
 
 // ── GAME TABS ─────────────────────────────────────────────────────────────────
 function renderGameTabs() {
@@ -684,7 +746,7 @@ function clearGame() {
 // ── GOALS MODAL ───────────────────────────────────────────────────────────────
 function getTeamScore(gIdx) {
   let total = 0;
-  players.forEach(p => { total += getGoals(p, gIdx); });
+  activePlayers().forEach(p => { total += getGoals(p, gIdx); });
   return total;
 }
 
@@ -717,7 +779,7 @@ function openGoalsModal() {
   document.getElementById('goalsGameName').textContent = g.name;
   const list = document.getElementById('goalsList');
   list.innerHTML = '';
-  players.forEach(p => {
+  players.forEach(({name: p}) => {
     const c = getGoals(p, curGame);
     const row = document.createElement('div');
     row.className = 'goal-row';
@@ -790,6 +852,11 @@ function renderSeasonRecord() {
   document.getElementById('recWins').textContent = w;
   document.getElementById('recLosses').textContent = l;
   document.getElementById('recTies').textContent = t;
+  // Empty state
+  const hasCompleted = games.some(g => g.completed);
+  if (!hasCompleted) {
+    resultsEl.innerHTML = `<div class="empty-state"><i class="ti ti-trophy"></i><p><strong>No games completed yet</strong>Complete a game to see your record</p></div>`;
+  }
 }
 
 // ── ROTATIONS ─────────────────────────────────────────────────────────────────
@@ -1001,7 +1068,7 @@ function makeBench(rIdx, benchNames, isPlayed) {
   const rot = games[curGame].rotations[rIdx];
   const onField = new Set();
   POSITIONS.forEach(pos => rot[pos].forEach(p => { if(p) onField.add(p); }));
-  const available = players.filter(p => !onField.has(p) && !benchNames.includes(p));
+  const available = activePlayers().filter(p => !onField.has(p) && !benchNames.includes(p));
 
   [...benchNames, ...available].forEach(p => {
     const isFilled = benchNames.includes(p);
@@ -1085,13 +1152,13 @@ function handleDrop(target) {
 // ── AUTO-GENERATE ─────────────────────────────────────────────────────────────
 // Respects: played rotations (frozen), locked slots (fixed), cross-game history
 function autoGenerate() {
-  if (players.length < FIELD_SIZE) { alert('Need at least 6 players.'); return; }
+  if (activePlayers().length < FIELD_SIZE) { alert('Need at least 6 players.'); return; }
 
   const game = games[curGame];
 
   // Cumulative counts from PLAYED rotations across ALL games (including current)
   const counts = {};
-  players.forEach(p => counts[p] = { def:0, mid:0, fwd:0, total:0 });
+  activePlayers().forEach(p => counts[p] = { def:0, mid:0, fwd:0, total:0 });
 
   games.forEach(g => {
     g.rotations.forEach(rot => {
@@ -1133,7 +1200,7 @@ function autoGenerate() {
     });
 
     const openCount = openSlots.length; // how many players to put on field
-    const available = players.filter(p => !lockedNames.has(p));
+    const available = activePlayers().filter(p => !lockedNames.has(p));
 
     // Sort available by total played (ascending) for even time
     const sorted = available.sort((a,b) => counts[a].total - counts[b].total);
@@ -1175,7 +1242,7 @@ function shuffleArr(arr) {
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function getGameStats() {
   const s = {};
-  players.forEach(p => s[p] = { def:0, mid:0, fwd:0, total:0, goals:0 });
+  players.forEach(p => s[p.name] = { def:0, mid:0, fwd:0, total:0, goals:0 });
   const g = games[curGame];
   g.rotations.forEach(rot => {
     ensureShape(rot);
@@ -1183,13 +1250,13 @@ function getGameStats() {
       if (p && s[p]) { s[p][pos]++; s[p].total++; }
     }));
   });
-  players.forEach(p => { s[p].goals += getGoals(p, curGame); });
+  players.forEach(p => { s[p.name].goals += getGoals(p.name, curGame); });
   return s;
 }
 
 function getCumulativeStats() {
   const s = {};
-  players.forEach(p => s[p] = { def:0, mid:0, fwd:0, total:0, goals:0 });
+  players.forEach(p => s[p.name] = { def:0, mid:0, fwd:0, total:0, goals:0 });
   games.forEach((g, gIdx) => {
     g.rotations.forEach(rot => {
       ensureShape(rot);
@@ -1197,7 +1264,7 @@ function getCumulativeStats() {
         if (p && s[p]) { s[p][pos]++; s[p].total++; }
       }));
     });
-    players.forEach(p => { s[p].goals += getGoals(p, gIdx); });
+    players.forEach(p => { s[p.name].goals += getGoals(p.name, gIdx); });
   });
   return s;
 }
@@ -1213,9 +1280,13 @@ function renderStats() {
   const grid = document.getElementById('statsGrid');
   const s = statsScope === 'season' ? getCumulativeStats() : getGameStats();
   grid.innerHTML = '';
-  [...players].sort((a,b) => s[b].total - s[a].total).forEach(p => {
+  if (players.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><p>Add players to see stats</p></div>`;
+    return;
+  }
+  [...players].map(p => p.name).sort((a,b) => s[b].total - s[a].total).forEach(p => {
     const row = document.createElement('div');
-    row.className = 'stat-row';
+    row.className = 'stat-row' + (players.find(pl => pl.name === p)?.active === false ? ' inactive' : '');
     row.innerHTML = `
       <span class="sname">${p}</span>
       <span class="stat-val def">${s[p].def}</span>
@@ -1322,6 +1393,8 @@ function startFirebaseSync() {
         renderAndSave();
         autoGenerate();
       }
+      hideLoadingOverlay();
+      document.querySelector('.main').classList.add('fade-in');
     } else {
       loadFromFirebase(data);
     }
