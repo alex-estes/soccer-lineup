@@ -493,8 +493,8 @@ function saveToFirebase() {
 }
 
 function loadFromFirebase(data) {
-  // If we just saved within the last 2 seconds, skip (it's our own echo)
-  if (Date.now() - _lastSaveTime < 2000) return;
+  // Skip if we just saved (echo prevention), but never skip on initial load (_lastSaveTime === 0)
+  if (_lastSaveTime !== 0 && Date.now() - _lastSaveTime < 2000) return;
   if (data.players) players = data.players;
   if (data.goals)   goals   = data.goals;
   if (data.games)   games   = data.games.map(g => ({
@@ -1303,19 +1303,21 @@ window.addEventListener('resize', () => { renderSnapDots(); updateSnapDots(); })
 let _initialLoad = true;
 function startFirebaseSync() {
   if (!window._startSync) {
-    // Module not ready yet, retry in 100ms
     setTimeout(startFirebaseSync, 100);
     return;
   }
   window._startSync(data => {
     if (_initialLoad) {
       _initialLoad = false;
+      // Always load from Firebase on first connect — this is the authoritative state
       const hasData = data.games && data.games.some(g =>
         g.rotations && g.rotations.some(r =>
           ['def','mid','fwd'].some(p => r[p] && r[p].some(Boolean))
         )
       );
       if (hasData) {
+        // Force load by resetting timestamp so echo check doesn't block it
+        _lastSaveTime = 0;
         loadFromFirebase(data);
       } else {
         autoGenerate();
