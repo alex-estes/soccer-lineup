@@ -592,9 +592,9 @@ function loadFromFirebase(data) {
 function showSyncStatus(state) {
   let el = document.getElementById('syncStatus');
   if (!el) return;
-  if (state === 'saving') { el.textContent = '↑ Saving…'; el.style.color = 'rgba(255,255,255,0.4)'; }
-  else if (state === 'saved') { el.textContent = '✓ Synced'; el.style.color = 'rgba(168,155,249,0.7)'; }
-  else if (state === 'error') { el.textContent = '⚠ Offline'; el.style.color = '#f97b8b'; }
+  if (state === 'saving') { el.innerHTML = '<i class="ti ti-cloud-upload"></i> Saving…'; el.style.color = 'rgba(255,255,255,0.4)'; }
+  else if (state === 'saved') { el.innerHTML = '<i class="ti ti-cloud"></i> Synced'; el.style.color = 'rgba(168,155,249,0.7)'; }
+  else if (state === 'error') { el.innerHTML = '<i class="ti ti-cloud-off"></i> Offline'; el.style.color = '#f97b8b'; }
 }
 
 function hideLoadingOverlay() {
