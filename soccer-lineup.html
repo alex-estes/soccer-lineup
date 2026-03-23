@@ -22,13 +22,34 @@
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
     box-shadow: 0 4px 24px rgba(30,10,60,0.45);
-    padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    padding: 8px 20px 10px; display: flex; flex-direction: column; gap: 4px;
     position: sticky; top: 0; z-index: 40;
   }
-  .header-left { display: flex; align-items: baseline; gap: 14px; }
+  .header-brand { display: flex; align-items: center; }
+  .header-main-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .header-left { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   header h1 { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
   .header-game-name { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.75rem; color: rgba(255,255,255,0.35); letter-spacing: 0.05em; text-transform: uppercase; }
   .header-rotation-label { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.68rem; letter-spacing: 0.08em; color: var(--green-light); text-transform: uppercase; background: rgba(168,155,249,0.1); border: 1px solid rgba(168,155,249,0.25); border-radius: 4px; padding: 2px 8px; }
+  .header-menu-wrap { position: relative; }
+  .header-dropdown {
+    position: absolute; right: 0; top: calc(100% + 6px);
+    background: #1e1b2e; border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px; min-width: 150px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: none; flex-direction: column; gap: 2px; z-index: 50;
+  }
+  .header-dropdown.open { display: flex; }
+  .header-dropdown button {
+    background: transparent; border: none; color: var(--white);
+    font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600;
+    letter-spacing: 0.03em; text-transform: uppercase;
+    padding: 9px 12px; border-radius: 6px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: background 0.15s;
+  }
+  .header-dropdown button:hover { background: rgba(255,255,255,0.07); }
+  .header-dropdown button i { font-size: 1rem; }
   .btn { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.03em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
   .btn-primary {
     background-image: linear-gradient(160deg, #8b7cf8 0%, #5a45d4 100%);
@@ -292,7 +313,7 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
   @media print {
-    header .header-controls, .sidebar, .game-tabs, .notice, .sticky-footer { display: none !important; }
+    header .header-menu-wrap, .sidebar, .game-tabs, .notice, .sticky-footer { display: none !important; }
     .main { grid-template-columns: 1fr; }
     body { background: white; color: black; }
     .rotation-card { border: 1px solid #ccc; break-inside: avoid; }
@@ -304,9 +325,6 @@
   @media (max-width: 700px) {
     .main { grid-template-columns: 1fr; }
     .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
-    header { flex-direction: column; align-items: stretch; gap: 8px; }
-    .header-left { flex: 1; justify-content: space-between; }
-    .header-controls { display: flex; justify-content: flex-end; gap: 8px; }
     #goalsModal .modal { max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; }
     #goalsModal .modal-body { flex: 1; overflow-y: auto; }
 
@@ -355,15 +373,22 @@
 </div>
 
 <header>
-  <div class="header-left">
+  <div class="header-brand">
     <h1><i class="ti ti-ball-football"></i> Eagles Soccer</h1>
-    <span class="header-game-name" id="headerGameName"></span>
-    <span class="header-rotation-label" id="headerRotationLabel"></span>
-    <span id="syncStatus" style="font-family:'Inter',sans-serif;font-size:0.62rem;font-weight:600;letter-spacing:0.06em;color:rgba(255,255,255,0.3);text-transform:uppercase;"></span>
   </div>
-  <div class="header-controls">
-    <button class="btn btn-secondary" onclick="window.print()" title="Print"><i class="ti ti-printer"></i></button>
-    <button class="btn btn-secondary" onclick="clearGame()"><i class="ti ti-trash"></i> Clear</button>
+  <div class="header-main-row">
+    <div class="header-left">
+      <span class="header-game-name" id="headerGameName"></span>
+      <span class="header-rotation-label" id="headerRotationLabel"></span>
+      <span id="syncStatus" style="font-family:'Inter',sans-serif;font-size:0.62rem;font-weight:600;letter-spacing:0.06em;color:rgba(255,255,255,0.3);text-transform:uppercase;"></span>
+    </div>
+    <div class="header-menu-wrap">
+      <button class="btn btn-secondary" id="headerMenuBtn" onclick="toggleHeaderMenu()" title="Menu"><i class="ti ti-menu-4"></i></button>
+      <div class="header-dropdown" id="headerDropdown">
+        <button onclick="window.print(); closeHeaderMenu()"><i class="ti ti-printer"></i> Print</button>
+        <button onclick="clearGame(); closeHeaderMenu()"><i class="ti ti-trash"></i> Clear</button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -507,6 +532,17 @@ window._startSync = function(onRemoteUpdate) {
 </script>
 
 <script>
+// ── HEADER MENU ───────────────────────────────────────────────────────────────
+function toggleHeaderMenu() {
+  document.getElementById('headerDropdown').classList.toggle('open');
+}
+function closeHeaderMenu() {
+  document.getElementById('headerDropdown').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.header-menu-wrap')) closeHeaderMenu();
+});
+
 // ── FIREBASE SYNC ─────────────────────────────────────────────────────────────
 let _lastSaveTime = 0;
 
