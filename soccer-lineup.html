@@ -116,7 +116,7 @@
   .notice { background: rgba(168,155,249,0.06); border: 1px solid rgba(168,155,249,0.2); border-radius: 5px; padding: 8px 12px; font-size: 0.79rem; color: rgba(168,155,249,0.85); margin-bottom: 14px; }
 
   /* ROTATION CARDS */
-  .rotations { display: flex; flex-direction: column; gap: 10px; }
+  .rotations { display: flex; flex-direction: column; gap: 8px; }
   .rotation-card { background: var(--card); border: 2px solid var(--border); border-radius: 8px; overflow: visible; transition: border-color 0.2s; }
   .rotation-card.is-played { border-color: var(--played-border); background: #17142a; }
   .rotation-card.is-played .rotation-header { background: #201d35; }
@@ -351,7 +351,7 @@
 <!-- Loading Overlay -->
 <div id="loadingOverlay" style="position:fixed;inset:0;z-index:999;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.4s;">
   <div class="loader-ball"><i class="ti ti-ball-football"></i></div>
-  <div class="loader-text">Connecting…</div>
+  <div class="loader-text">Loading...</div>
 </div>
 
 <header>
