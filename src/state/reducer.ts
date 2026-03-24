@@ -1,4 +1,4 @@
-import { DEFAULT_PLAYERS, POSITIONS } from '../constants';
+import { POSITIONS } from '../constants';
 import { autoGenerate } from '../lib/autoGenerate';
 import { ensureShape, emptyRotations } from '../lib/utils';
 import type {
@@ -9,7 +9,7 @@ import type {
 // ── Initial State ────────────────────────────────────────────────────────────
 
 export const initialState: AppState = {
-  players: DEFAULT_PLAYERS.map(name => ({ name, active: true })),
+  players: [],
   goals: {},
   games: [{ name: 'Game 1', rotations: emptyRotations(), opponentScore: 0, completed: false }],
   curGame: 0,
