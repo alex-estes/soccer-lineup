@@ -1,5 +1,8 @@
 import { useReducer, useState, useEffect } from 'react';
+import type { DocumentReference } from 'firebase/firestore';
+import type { User } from 'firebase/auth';
 import { LoadingOverlay } from './components/LoadingOverlay';
+import { SignInPage } from './components/SignInPage';
 import { Header } from './components/Header/Header';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { Content } from './components/Content/Content';
@@ -9,10 +12,18 @@ import { GoalsModal } from './components/Modals/GoalsModal';
 import { AppContext } from './state/AppContext';
 import { reducer, initialState } from './state/reducer';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
+import { useAuth } from './hooks/useAuth';
+import { getUserLineupDoc } from './lib/firebaseConfig';
 
-export function App() {
+interface AuthenticatedAppProps {
+  lineupDoc: DocumentReference;
+  user: User;
+  onSignOut: () => void;
+}
+
+function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const syncStatus = useFirebaseSync(state, dispatch);
+  const syncStatus = useFirebaseSync(state, dispatch, lineupDoc);
 
   const [newGameOpen, setNewGameOpen] = useState(false);
   const [goalsOpen, setGoalsOpen] = useState(false);
@@ -59,7 +70,7 @@ export function App() {
   return (
     <AppContext.Provider value={{ state, dispatch }}>
       {!state.isLoaded && <LoadingOverlay />}
-      <Header syncStatus={syncStatus} />
+      <Header syncStatus={syncStatus} user={user} onSignOut={onSignOut} />
       <div className={`main${state.isLoaded ? ' fade-in' : ''}`}>
         <Sidebar />
         <Content onNewGame={() => setNewGameOpen(true)} />
@@ -69,6 +80,16 @@ export function App() {
       <GoalsModal open={goalsOpen} onClose={() => setGoalsOpen(false)} />
     </AppContext.Provider>
   );
+}
+
+export function App() {
+  const { user, loading, signIn, signOut } = useAuth();
+
+  if (loading) return <LoadingOverlay />;
+  if (!user) return <SignInPage onSignIn={signIn} />;
+
+  const lineupDoc = getUserLineupDoc(user.uid);
+  return <AuthenticatedApp lineupDoc={lineupDoc} user={user} onSignOut={signOut} />;
 }
 
 export default App;
