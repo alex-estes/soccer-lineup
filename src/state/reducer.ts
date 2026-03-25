@@ -39,6 +39,8 @@ export type Action =
   | { type: 'COMPLETE_GAME'; gameIndex: number }
   | { type: 'SET_LINEUP'; gameIndex: number; rotations: Rotation[] }
   | { type: 'SET_STATS_SCOPE'; scope: StatsScope }
+  | { type: 'RENAME_GAME'; gameIndex: number; name: string }
+  | { type: 'DELETE_GAME'; gameIndex: number }
   | { type: 'LOAD_FROM_FIREBASE'; data: Partial<{ players: unknown; goals: unknown; games: unknown; curGame: unknown }> };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -249,6 +251,38 @@ export function reducer(state: AppState, action: Action): AppState {
 
     case 'SET_STATS_SCOPE':
       return { ...state, statsScope: action.scope };
+
+    case 'RENAME_GAME': {
+      const games = state.games.map((g, i) =>
+        i === action.gameIndex ? { ...g, name: action.name.trim() || g.name } : g
+      );
+      return { ...state, games };
+    }
+
+    case 'DELETE_GAME': {
+      if (state.games.length <= 1) return state;
+      const { gameIndex } = action;
+      const games = state.games.filter((_, i) => i !== gameIndex);
+
+      // Shift goal game-indices for games after the deleted one
+      const goals: Goals = {};
+      Object.entries(state.goals).forEach(([player, gameGoals]) => {
+        const shifted: Record<number, number> = {};
+        Object.entries(gameGoals).forEach(([gIdx, count]) => {
+          const idx = Number(gIdx);
+          if (idx < gameIndex) shifted[idx] = count;
+          else if (idx > gameIndex) shifted[idx - 1] = count;
+          // idx === gameIndex: dropped
+        });
+        goals[player] = shifted;
+      });
+
+      let curGame = state.curGame;
+      if (gameIndex === curGame) curGame = Math.max(0, gameIndex - 1);
+      else if (gameIndex < curGame) curGame -= 1;
+
+      return { ...state, games, goals, curGame, swapSel: null, slotMenuSel: null };
+    }
 
     case 'LOAD_FROM_FIREBASE': {
       const { data } = action;
