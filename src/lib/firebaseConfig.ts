@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCJpTcL7cjKONJBIk3YXVqu-Q59qRH_1as',
@@ -12,4 +13,8 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 export const db = getFirestore(fbApp);
-export const lineupDoc = doc(db, 'lineups', 'main');
+export const auth = getAuth(fbApp);
+
+export function getUserLineupDoc(uid: string) {
+  return doc(db, 'users', uid, 'lineups', 'main');
+}

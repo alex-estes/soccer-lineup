@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { IconBallFootball } from '@tabler/icons-react';
+import type { User } from 'firebase/auth';
 import { HeaderMenu } from './HeaderMenu';
 import { useAppState } from '../../state/AppContext';
 import type { SyncStatus } from '../../types';
 
 interface Props {
   syncStatus: SyncStatus;
+  user: User;
+  onSignOut: () => void;
 }
 
-export function Header({ syncStatus }: Props) {
+export function Header({ syncStatus, user, onSignOut }: Props) {
   const { state, dispatch } = useAppState();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -59,6 +62,8 @@ export function Header({ syncStatus }: Props) {
           onToggle={() => setMenuOpen(v => !v)}
           onClose={() => setMenuOpen(false)}
           onClear={handleClear}
+          user={user}
+          onSignOut={onSignOut}
         />
       </div>
     </header>

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type Dispatch } from 'react';
-import { setDoc, onSnapshot } from 'firebase/firestore';
-import { lineupDoc } from '../lib/firebaseConfig';
+import { setDoc, onSnapshot, type DocumentReference } from 'firebase/firestore';
 import { autoGenerate } from '../lib/autoGenerate';
 import type { Action } from '../state/reducer';
 import type { AppState, SyncStatus } from '../types';
@@ -8,7 +7,7 @@ import type { AppState, SyncStatus } from '../types';
 const ECHO_WINDOW_MS = 2000;
 const DEBOUNCE_MS = 600;
 
-export function useFirebaseSync(state: AppState, dispatch: Dispatch<Action>): SyncStatus {
+export function useFirebaseSync(state: AppState, dispatch: Dispatch<Action>, lineupDoc: DocumentReference): SyncStatus {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const lastSaveTimeRef = useRef<number>(0);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
