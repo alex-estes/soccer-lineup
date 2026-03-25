@@ -23,14 +23,27 @@ header h1 { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.7re
 .header-game-name { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.75rem; color: rgba(255,255,255,0.35); letter-spacing: 0.05em; text-transform: uppercase; }
 .header-rotation-label { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.68rem; letter-spacing: 0.08em; color: var(--green-light); text-transform: uppercase; background: rgba(168,155,249,0.1); border: 1px solid rgba(168,155,249,0.25); border-radius: 4px; padding: 2px 8px; }
 .header-menu-wrap { position: relative; }
+.header-avatar-btn {
+  background: rgba(168,155,249,0.12); border: 1.5px solid rgba(168,155,249,0.3);
+  border-radius: 50%; width: 34px; height: 34px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; overflow: hidden; transition: border-color 0.2s;
+}
+.header-avatar-btn:hover { border-color: var(--green-light); }
+.header-avatar-img { width: 34px; height: 34px; object-fit: cover; border-radius: 50%; }
+.header-avatar-initials { font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--green-light); letter-spacing: 0.04em; }
 .header-dropdown {
   position: absolute; right: 0; top: calc(100% + 6px);
   background: #1e1b2e; border: 1px solid var(--border);
-  border-radius: 8px; padding: 4px; min-width: 150px;
+  border-radius: 8px; padding: 4px; min-width: 190px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   display: none; flex-direction: column; gap: 2px; z-index: 50;
 }
 .header-dropdown.open { display: flex; }
+.header-dropdown-user { padding: 10px 12px 8px; display: flex; flex-direction: column; gap: 2px; }
+.header-dropdown-name { font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 700; color: var(--white); }
+.header-dropdown-email { font-family: 'Inter', sans-serif; font-size: 0.7rem; color: var(--gray); }
+.header-dropdown-divider { height: 1px; background: var(--border); margin: 2px 0; }
 .header-dropdown button {
   background: transparent; border: none; color: var(--white);
   font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600;
@@ -41,6 +54,38 @@ header h1 { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.7re
 }
 .header-dropdown button:hover { background: rgba(255,255,255,0.07); }
 .header-dropdown button svg { font-size: 1rem; }
+.header-dropdown-signout { color: rgba(249,123,139,0.85) !important; }
+.header-dropdown-signout:hover { background: rgba(249,123,139,0.08) !important; }
+
+/* Sign-in page */
+.sign-in-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--dark); padding: 24px;
+}
+.sign-in-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 48px 40px; max-width: 380px; width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+.sign-in-logo { color: var(--green-light); }
+.sign-in-title {
+  font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.5rem;
+  color: var(--white); letter-spacing: 0.02em;
+}
+.sign-in-subtitle {
+  font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 400;
+  color: var(--gray); text-align: center; line-height: 1.5; margin-bottom: 8px;
+}
+.sign-in-google-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; color: #3c4043;
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;
+  border: none; border-radius: 8px; padding: 12px 24px;
+  cursor: pointer; width: 100%; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: box-shadow 0.2s, transform 0.15s;
+}
+.sign-in-google-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.4); transform: translateY(-1px); }
 .btn { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.03em; text-transform: uppercase; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
 .btn-primary {
   background-image: linear-gradient(160deg, #8b7cf8 0%, #5a45d4 100%);

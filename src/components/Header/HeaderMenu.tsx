@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
-import { IconPrinter, IconTrash } from '@tabler/icons-react';
+import { IconPrinter, IconTrash, IconLogout } from '@tabler/icons-react';
+import type { User } from 'firebase/auth';
 
 interface Props {
   open: boolean;
   onToggle: () => void;
   onClose: () => void;
   onClear: () => void;
+  user: User;
+  onSignOut: () => void;
 }
 
-export function HeaderMenu({ open, onToggle, onClose, onClear }: Props) {
+export function HeaderMenu({ open, onToggle, onClose, onClear, user, onSignOut }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,19 +24,33 @@ export function HeaderMenu({ open, onToggle, onClose, onClear }: Props) {
     return () => document.removeEventListener('click', handleClick);
   }, [onClose]);
 
+  const initials = user.displayName
+    ? user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : user.email?.[0]?.toUpperCase() ?? '?';
+
   return (
     <div className="header-menu-wrap" ref={wrapRef}>
-      <button className="btn btn-secondary" onClick={onToggle} title="Menu">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
-        </svg>
+      <button className="header-avatar-btn" onClick={onToggle} title={user.displayName ?? user.email ?? 'Account'}>
+        {user.photoURL
+          ? <img src={user.photoURL} alt={initials} className="header-avatar-img" referrerPolicy="no-referrer" />
+          : <span className="header-avatar-initials">{initials}</span>
+        }
       </button>
       <div className={`header-dropdown${open ? ' open' : ''}`}>
+        <div className="header-dropdown-user">
+          <span className="header-dropdown-name">{user.displayName ?? 'Coach'}</span>
+          <span className="header-dropdown-email">{user.email}</span>
+        </div>
+        <div className="header-dropdown-divider" />
         <button onClick={() => { window.print(); onClose(); }}>
           <IconPrinter size={16} /> Print
         </button>
         <button onClick={() => { onClear(); onClose(); }}>
           <IconTrash size={16} /> Clear
+        </button>
+        <div className="header-dropdown-divider" />
+        <button className="header-dropdown-signout" onClick={() => { onSignOut(); onClose(); }}>
+          <IconLogout size={16} /> Sign out
         </button>
       </div>
     </div>
