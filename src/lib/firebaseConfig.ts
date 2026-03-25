@@ -3,7 +3,7 @@ import { getFirestore, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyCJpTcL7cjKONJBIk3YXVqu-Q59qRH_1as',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
   authDomain: 'soccer-lineup-f253e.firebaseapp.com',
   projectId: 'soccer-lineup-f253e',
   storageBucket: 'soccer-lineup-f253e.firebasestorage.app',
