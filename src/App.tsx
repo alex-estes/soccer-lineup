@@ -83,10 +83,10 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
 }
 
 export function App() {
-  const { user, loading, signIn, signOut } = useAuth();
+  const { user, loading, error, signIn, signOut } = useAuth();
 
   if (loading) return <LoadingOverlay />;
-  if (!user) return <SignInPage onSignIn={signIn} />;
+  if (!user) return <SignInPage onSignIn={signIn} redirectError={error} />;
 
   const lineupDoc = getUserLineupDoc(user.uid);
   return <AuthenticatedApp lineupDoc={lineupDoc} user={user} onSignOut={signOut} />;
