@@ -12,24 +12,22 @@ interface Counts {
 /**
  * Pure function: returns new rotations for the current game.
  * Respects played rotations (frozen) and locked slots (fixed).
- * Balances position time using cumulative counts across ALL games.
+ * Balances position time using cumulative counts from the current game only.
  */
 export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGame'>): Rotation[] {
   const active = activePlayers(state.players);
   if (active.length < FIELD_SIZE) return state.games[state.curGame].rotations;
 
-  // Cumulative counts from PLAYED rotations across ALL games
+  // Counts from PLAYED rotations in the current game only
   const counts: Record<string, Counts> = {};
   active.forEach(p => { counts[p] = { def: 0, mid: 0, fwd: 0, total: 0 }; });
 
-  state.games.forEach(g => {
-    g.rotations.forEach(rot => {
-      ensureShape(rot);
-      if (!rot.played) return;
-      POSITIONS.forEach(pos => {
-        rot[pos].forEach(p => {
-          if (p && counts[p]) { counts[p][pos]++; counts[p].total++; }
-        });
+  state.games[state.curGame].rotations.forEach(rot => {
+    ensureShape(rot);
+    if (!rot.played) return;
+    POSITIONS.forEach(pos => {
+      rot[pos].forEach(p => {
+        if (p && counts[p]) { counts[p][pos]++; counts[p].total++; }
       });
     });
   });
@@ -79,8 +77,8 @@ export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGam
     const openCount = openSlots.length;
     const available = active.filter(p => !lockedNames.has(p));
 
-    // Sort by total played ascending for even time
-    const sorted = [...available].sort((a, b) => counts[a].total - counts[b].total);
+    // Shuffle first so equal-count ties break randomly (not by array order)
+    const sorted = shuffleArr(available).sort((a, b) => counts[a].total - counts[b].total);
     const onField = sorted.slice(0, openCount);
     rot.bench = sorted.slice(openCount);
 
@@ -88,10 +86,11 @@ export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGam
     const byPos: Record<string, number[]> = { def: [], mid: [], fwd: [] };
     openSlots.forEach(s => byPos[s.pos].push(s.sIdx));
 
-    // Assign greedily: for each position, pick players with fewest plays there
-    const remaining = shuffleArr([...onField]);
+    // Assign greedily: for each position, shuffle before sorting so ties break randomly
+    let remaining = [...onField];
     POSITIONS.forEach(pos => {
       if (!byPos[pos].length) return;
+      remaining = shuffleArr(remaining);
       remaining.sort((a, b) => counts[a][pos] - counts[b][pos]);
       byPos[pos].forEach(sIdx => {
         const p = remaining.shift();
