@@ -3,23 +3,26 @@ import { IconBallFootball } from '@tabler/icons-react';
 
 interface Props {
   onSignIn: () => Promise<unknown>;
+  redirectError: string | null;
 }
 
-export function SignInPage({ onSignIn }: Props) {
+export function SignInPage({ onSignIn, redirectError }: Props) {
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [clickError, setClickError] = useState<string | null>(null);
 
   async function handleSignIn() {
     setPending(true);
-    setError(null);
+    setClickError(null);
     try {
       await onSignIn();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
+      setClickError(msg);
       setPending(false);
     }
   }
+
+  const displayError = redirectError ?? clickError;
 
   return (
     <div className="sign-in-page">
@@ -42,7 +45,7 @@ export function SignInPage({ onSignIn }: Props) {
           )}
           {pending ? 'Redirecting…' : 'Sign in with Google'}
         </button>
-        {error && <p className="sign-in-error">{error}</p>}
+        {displayError && <p className="sign-in-error">{displayError}</p>}
       </div>
     </div>
   );
