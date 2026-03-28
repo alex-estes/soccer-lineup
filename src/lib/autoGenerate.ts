@@ -1,5 +1,5 @@
 import { POSITIONS, FIELD_SIZE } from '../constants';
-import type { AppState, Rotation } from '../types';
+import type { AppState, Position, Rotation } from '../types';
 import { activePlayers, ensureShape, shuffleArr } from './utils';
 
 interface Counts {
@@ -13,6 +13,7 @@ interface Counts {
  * Pure function: returns new rotations for the current game.
  * Respects played rotations (frozen) and locked slots (fixed).
  * Balances position time using cumulative counts from the current game only.
+ * Avoids benching the same player two rotations in a row when possible.
  */
 export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGame'>): Rotation[] {
   const active = activePlayers(state.players);
@@ -46,9 +47,15 @@ export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGam
     },
   }));
 
+  // Track who was benched in the previous rotation to avoid consecutive bench
+  let prevBench = new Set<string>();
+
   rotations.forEach(rot => {
     ensureShape(rot);
-    if (rot.played) return;
+    if (rot.played) {
+      prevBench = new Set(rot.bench);
+      return;
+    }
 
     // Collect locked player names
     const lockedNames = new Set<string>();
@@ -67,31 +74,46 @@ export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGam
     rot.bench = [];
 
     // Open slots that need filling
-    const openSlots: { pos: 'def' | 'mid' | 'fwd'; sIdx: number }[] = [];
+    const openSlots: { pos: Position; sIdx: number }[] = [];
     POSITIONS.forEach(pos => {
       rot[pos].forEach((_p, sIdx) => {
         if (!rot.locked[pos][sIdx]) openSlots.push({ pos, sIdx });
       });
     });
 
-    const openCount = openSlots.length;
     const available = active.filter(p => !lockedNames.has(p));
+    const benchSize = Math.max(0, available.length - openSlots.length);
 
-    // Shuffle first so equal-count ties break randomly (not by array order)
-    const sorted = shuffleArr(available).sort((a, b) => counts[a].total - counts[b].total);
-    const onField = sorted.slice(0, openCount);
-    rot.bench = sorted.slice(openCount);
+    // Sort: most-played players bench first.
+    // Tie-break: players who were benched last rotation sort later (bench last) to avoid
+    // consecutive bench. Shuffle first so equal-count ties break randomly.
+    const sorted = shuffleArr([...available]).sort((a, b) => {
+      const playDiff = counts[b].total - counts[a].total;
+      if (playDiff !== 0) return playDiff;
+      // Among equal total plays, push previously-benched players toward the field
+      const aPrev = prevBench.has(a) ? 1 : 0;
+      const bPrev = prevBench.has(b) ? 1 : 0;
+      return aPrev - bPrev;
+    });
+
+    const bench = sorted.slice(0, benchSize);
+    const fieldPlayers = sorted.slice(benchSize);
+
+    rot.bench = bench;
+    prevBench = new Set(bench);
 
     // Group open slots by position
     const byPos: Record<string, number[]> = { def: [], mid: [], fwd: [] };
     openSlots.forEach(s => byPos[s.pos].push(s.sIdx));
 
-    // Assign greedily: for each position, shuffle before sorting so ties break randomly
-    let remaining = [...onField];
-    POSITIONS.forEach(pos => {
+    // Assign field players to positions greedily by position-specific count.
+    // Randomize position order each rotation to remove systematic bias.
+    let remaining = [...fieldPlayers];
+    const posOrder = shuffleArr([...POSITIONS] as Position[]);
+
+    posOrder.forEach(pos => {
       if (!byPos[pos].length) return;
-      remaining = shuffleArr(remaining);
-      remaining.sort((a, b) => counts[a][pos] - counts[b][pos]);
+      remaining = shuffleArr(remaining).sort((a, b) => counts[a][pos] - counts[b][pos]);
       byPos[pos].forEach(sIdx => {
         const p = remaining.shift();
         if (p) {
