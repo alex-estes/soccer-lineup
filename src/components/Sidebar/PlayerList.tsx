@@ -17,7 +17,7 @@ export function PlayerList() {
           </div>
         ) : (
           state.players.map((_, i) => (
-            <PlayerChip key={i} index={i} number={i + 1} />
+            <PlayerChip key={i} index={i} />
           ))
         )}
       </div>
