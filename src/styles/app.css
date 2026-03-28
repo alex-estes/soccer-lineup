@@ -136,6 +136,12 @@ header h1 { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.7re
 .player-num { width: 20px; height: 20px; background: var(--green-dark); border-radius: 50%; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; color: var(--gold); flex-shrink: 0; }
 .player-name-input { background: transparent; border: none; color: var(--white); font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; width: 100%; outline: none; }
 .player-name-input::placeholder { color: var(--gray); }
+.player-chip-menu { position: relative; flex-shrink: 0; }
+.player-chip-dots { background: none; border: none; cursor: pointer; padding: 0 2px; color: var(--gray); display: flex; align-items: center; transition: color 0.15s; }
+.player-chip-dots:hover { color: var(--white); }
+.player-chip-dropdown { position: absolute; right: 0; top: calc(100% + 4px); background: #1e1b2e; border: 1px solid var(--border); border-radius: 8px; padding: 4px; min-width: 148px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 100; }
+.player-chip-delete { background: transparent; border: none; color: rgba(242,94,94,0.8); padding: 8px 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; width: 100%; transition: background 0.15s, color 0.15s; }
+.player-chip-delete:hover { background: rgba(242,94,94,0.1); color: #f25e5e; }
 .add-player-row { display: flex; gap: 6px; margin-top: 8px; }
 .add-player-row input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px; color: var(--white); font-family: 'Inter', sans-serif; font-size: 0.82rem; padding: 6px 9px; outline: none; }
 .add-player-row input:focus { border-color: var(--gold); }
