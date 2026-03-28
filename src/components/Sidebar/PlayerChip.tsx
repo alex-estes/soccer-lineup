@@ -73,12 +73,12 @@ export function PlayerChip({ index }: Props) {
           <IconDots size={16} />
         </button>
         {menuOpen && (
-          <div className="player-chip-dropdown">
+          <div className="header-dropdown open">
             <button
-              className="player-chip-delete"
+              className="header-dropdown-signout"
               onClick={() => { setMenuOpen(false); handleRemove(); }}
             >
-              <IconTrash size={14} /> Delete Player
+              <IconTrash size={16} /> Delete Player
             </button>
           </div>
         )}

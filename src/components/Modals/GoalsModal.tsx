@@ -1,4 +1,4 @@
-import { IconBallFootball, IconShield, IconTrophy } from '@tabler/icons-react';
+import { IconBallFootball, IconMinus, IconPlus, IconShield, IconTrophy } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { getTeamScore } from '../../lib/stats';
 
@@ -64,9 +64,9 @@ export function GoalsModal({ open, onClose }: Props) {
               <div className="goal-row" key={name}>
                 <span className="gname">{name}</span>
                 <div className="goal-stepper">
-                  <button onClick={() => adjGoal(name, -1)}>−</button>
+                  <button onClick={() => adjGoal(name, -1)}><IconMinus size={16} /></button>
                   <span className="goal-count">{getGoalCount(name)}</span>
-                  <button onClick={() => adjGoal(name, 1)}>+</button>
+                  <button onClick={() => adjGoal(name, 1)}><IconPlus size={16} /></button>
                 </div>
               </div>
             ))}
@@ -78,9 +78,9 @@ export function GoalsModal({ open, onClose }: Props) {
               <IconShield size={16} /> Opponent Score
             </span>
             <div className="goal-stepper">
-              <button onClick={() => adjOpponent(-1)}>−</button>
+              <button onClick={() => adjOpponent(-1)}><IconMinus size={16} /></button>
               <span className="goal-count">{opponentScore}</span>
-              <button onClick={() => adjOpponent(1)}>+</button>
+              <button onClick={() => adjOpponent(1)}><IconPlus size={16} /></button>
             </div>
           </div>
           <div className={scoreSummaryClass}>{scoreSummaryLabel}</div>
