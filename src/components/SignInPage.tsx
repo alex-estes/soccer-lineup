@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IconBallFootball } from '@tabler/icons-react';
+import styles from './SignInPage.module.css';
 
 interface Props {
   onSignIn: () => Promise<unknown>;
@@ -25,16 +26,16 @@ export function SignInPage({ onSignIn, redirectError }: Props) {
   const displayError = redirectError ?? clickError;
 
   return (
-    <div className="sign-in-page">
-      <div className="sign-in-card">
-        <div className="sign-in-logo">
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <div className={styles.logo}>
           <IconBallFootball size={40} />
         </div>
-        <h1 className="sign-in-title">Eagles Soccer</h1>
-        <p className="sign-in-subtitle">Manage your team's rotations and playing time</p>
-        <button className="sign-in-google-btn" onClick={handleSignIn} disabled={pending}>
+        <h1 className={styles.title}>Soccer Lineup</h1>
+        <p className={styles.subtitle}>Manage your team's rotations and playing time</p>
+        <button className={styles.googleButton} onClick={handleSignIn} disabled={pending}>
           {pending ? (
-            <span className="sign-in-spinner" />
+            <span className={styles.spinner} />
           ) : (
             <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -45,7 +46,7 @@ export function SignInPage({ onSignIn, redirectError }: Props) {
           )}
           {pending ? 'Redirecting…' : 'Sign in with Google'}
         </button>
-        {displayError && <p className="sign-in-error">{displayError}</p>}
+        {displayError && <p className={styles.error}>{displayError}</p>}
       </div>
     </div>
   );

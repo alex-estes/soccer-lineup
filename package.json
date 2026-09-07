@@ -10,8 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/utilities": "^3.2.2",
     "@tabler/icons-react": "^3.40.0",
     "firebase": "^12.11.0",
     "react": "^19.2.4",

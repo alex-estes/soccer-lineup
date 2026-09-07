@@ -52,6 +52,7 @@
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-base: 16px;
+  --font-size-lg: 24px; /* not a Figma-mocked screen — used only for the sign-in page's hero title */
   --font-size-xl: 36px;
 
   /* touch targets — every interactive control in the design (buttons, icon
@@ -62,4 +63,26 @@
      padding + 2px border) — used as the sticky `top` offset for the page
      sub-header that sits directly beneath it (Game Day, Settings). */
   --header-height: 66px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
 }

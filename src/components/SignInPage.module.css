@@ -1,0 +1,89 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-base);
+  padding: var(--space-16);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-16);
+  width: 100%;
+  max-width: 380px;
+  padding: 48px 32px;
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+
+.logo {
+  color: var(--color-brand-primary);
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-lg);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.5;
+  margin-top: calc(var(--space-8) * -1);
+}
+
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-12) var(--space-16);
+  background: #fff;
+  color: #3c4043;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.googleButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(60, 64, 67, 0.3);
+  border-top-color: #3c4043;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  text-align: center;
+  line-height: 1.4;
+}
