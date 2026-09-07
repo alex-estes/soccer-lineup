@@ -6,6 +6,9 @@
   padding: var(--space-4) var(--space-16) var(--space-4) var(--space-8);
   background: var(--color-bg-surface);
   border-bottom: 2px solid var(--color-border-default);
+  position: sticky;
+  top: var(--header-height);
+  z-index: 30;
 }
 
 .left {
@@ -19,7 +22,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: var(--space-8);
+  box-sizing: border-box;
+  border-radius: var(--radius-lg);
   color: var(--color-text-primary);
+  flex-shrink: 0;
 }
 
 .name {
