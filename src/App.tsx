@@ -1,14 +1,12 @@
-import { useReducer, useState, useEffect } from 'react';
+import { useReducer, useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { DocumentReference } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { SignInPage } from './components/SignInPage';
-import { Header } from './components/Header/Header';
-import { Sidebar } from './components/Sidebar/Sidebar';
-import { Content } from './components/Content/Content';
-import { StickyFooter } from './components/Footer/StickyFooter';
-import { NewGameModal } from './components/Modals/NewGameModal';
-import { GoalsModal } from './components/Modals/GoalsModal';
+import { HomePage } from './pages/Home/HomePage';
+import { GameDayPage } from './pages/GameDay/GameDayPage';
+import { SettingsPage } from './pages/Settings/SettingsPage';
 import { AppContext } from './state/AppContext';
 import { reducer, initialState } from './state/reducer';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
@@ -25,21 +23,16 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
   const [state, dispatch] = useReducer(reducer, initialState);
   const syncStatus = useFirebaseSync(state, dispatch, lineupDoc);
 
-  const [newGameOpen, setNewGameOpen] = useState(false);
-  const [goalsOpen, setGoalsOpen] = useState(false);
-
-  // Close swap/menu state on Escape; close modals on Escape
+  // Close swap/slot-menu selection on Escape
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== 'Escape') return;
-      if (newGameOpen) { setNewGameOpen(false); return; }
-      if (goalsOpen) { setGoalsOpen(false); return; }
       if (state.swapSel) { dispatch({ type: 'SET_SWAP_SEL', swapSel: null }); return; }
       if (state.slotMenuSel) { dispatch({ type: 'SET_SLOT_MENU', slotMenuSel: null }); }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [newGameOpen, goalsOpen, state.swapSel, state.slotMenuSel]);
+  }, [state.swapSel, state.slotMenuSel]);
 
   // Dismiss swapSel when clicking outside bench/swap-target
   useEffect(() => {
@@ -70,14 +63,14 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
   return (
     <AppContext.Provider value={{ state, dispatch }}>
       {!state.isLoaded && <LoadingOverlay />}
-      <Header syncStatus={syncStatus} user={user} onSignOut={onSignOut} />
-      <div className={`main${state.isLoaded ? ' fade-in' : ''}`}>
-        <Sidebar />
-        <Content onNewGame={() => setNewGameOpen(true)} />
-      </div>
-      <StickyFooter onOpenGoals={() => setGoalsOpen(true)} />
-      <NewGameModal open={newGameOpen} onClose={() => setNewGameOpen(false)} />
-      <GoalsModal open={goalsOpen} onClose={() => setGoalsOpen(false)} />
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<HomePage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
+          <Route path="/game/:gameId" element={<GameDayPage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </HashRouter>
     </AppContext.Provider>
   );
 }

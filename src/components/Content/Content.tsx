@@ -1,15 +1,11 @@
 import { useMemo } from 'react';
-import { GameTabs } from './GameTabs';
+import { Link } from 'react-router-dom';
 import { RotationList } from './RotationList';
 import { useAppState } from '../../state/AppContext';
 import { getUnfilledCount } from '../../lib/stats';
 import { getGame } from '../../lib/utils';
 
-interface Props {
-  onNewGame: () => void;
-}
-
-export function Content({ onNewGame }: Props) {
+export function Content() {
   const { state } = useAppState();
 
   const rots = getGame(state.games, state.curGame)?.rotations ?? [];
@@ -22,8 +18,8 @@ export function Content({ onNewGame }: Props) {
 
   return (
     <main className="content">
-      <GameTabs onNewGame={onNewGame} />
       <div className="content-header">
+        <Link to="/">&larr; Back</Link>
         <h2>Rotation Schedule</h2>
         <span className="rotation-label">{rotLabel}</span>
       </div>
