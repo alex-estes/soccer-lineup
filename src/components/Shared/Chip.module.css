@@ -1,0 +1,38 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-sm);
+  border: 2px solid;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.win {
+  background: var(--teal-900);
+  border-color: var(--teal-700);
+  color: var(--color-brand-primary);
+}
+
+.loss {
+  background: var(--red-loss-bg);
+  border-color: var(--red-500);
+  color: var(--red-300);
+}
+
+.tie {
+  background: var(--neutral-700);
+  border-color: var(--neutral-500);
+  color: var(--neutral-300);
+}
+
+.neutral {
+  background: var(--neutral-700);
+  border-color: var(--neutral-500);
+  color: var(--neutral-300);
+}

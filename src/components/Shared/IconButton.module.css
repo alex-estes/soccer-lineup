@@ -1,0 +1,28 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-8);
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  border: 2px solid transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.button:hover {
+  background: var(--color-bg-surface);
+}
+
+.outline {
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+}
+
+.danger {
+  color: var(--color-danger);
+}

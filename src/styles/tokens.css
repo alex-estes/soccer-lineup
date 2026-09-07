@@ -1,0 +1,60 @@
+/* Design tokens pulled from Figma (file t6Vk02IAE9CI5TnwjYSdNi) via get_variable_defs.
+   Names mirror Figma's own variable names so they stay traceable back to the source. */
+:root {
+  /* semantic colors */
+  --color-bg-base: #141a1f;
+  --color-bg-surface: #1d242b;
+  --color-text-primary: #f3f5f7;
+  --color-text-secondary: #98a3ae;
+  --color-text-disabled: #70808f;
+  --color-border-default: #3a4550;
+  --color-brand-primary: #62d5be;
+  --color-success: #62d5be;
+  --color-warning: #f1b44c;
+  --color-danger: #e76a74;
+  --color-button-primary-bg: #62d5be;
+  --color-button-primary-text: #141a1f;
+  --color-button-danger-bg: #e76a74;
+  --color-button-danger-text: #141a1f;
+
+  /* palette scale */
+  --teal-400: #62d5be;
+  --teal-700: #1f7060;
+  --teal-900: #0e3931;
+  --red-300: #eb8e96;
+  --red-400: #e76a74;
+  --red-500: #e34552;
+  --red-loss-bg: #583134; /* the "loss" chip's bg has no bound variable in Figma, only a raw hex */
+  --neutral-300: #98a3ae;
+  --neutral-400: #70808f;
+  --neutral-500: #53616f;
+  --neutral-600: #3a4550;
+  --neutral-700: #283039;
+  --blue-400: #63a6e9;
+
+  /* spacing */
+  --space-0: 0px;
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-36: 36px;
+
+  /* radius */
+  --radius-sm: 4px;
+  --radius-lg: 8px;
+
+  /* typography — Figma uses Plus Jakarta Sans with a consistent 0.07em
+     tracking at every size (16*.07=1.12, 14*.07=0.98, 36*.07=2.52, 12*.07=.84) */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --tracking-wide: 0.07em;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-xl: 36px;
+
+  /* touch targets — every interactive control in the design (buttons, icon
+     buttons) is built to a 40px minimum via its own padding+content sizing */
+  --tap-min: 40px;
+}

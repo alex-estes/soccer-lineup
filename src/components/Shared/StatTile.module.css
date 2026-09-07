@@ -1,0 +1,35 @@
+.tile {
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+
+.value {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-xl);
+  letter-spacing: var(--tracking-wide);
+  line-height: 1;
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--tracking-wide);
+}
+
+.win .value { color: var(--teal-400); }
+.win .label { color: var(--teal-700); }
+.loss .value { color: var(--red-300); }
+.loss .label { color: var(--red-400); }
+.tie .value { color: var(--neutral-300); }
+.tie .label { color: var(--neutral-400); }
