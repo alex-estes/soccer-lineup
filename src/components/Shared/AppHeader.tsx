@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { IconMenu2, IconUser, IconLogout } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
+import { IconMenu2, IconUser, IconLogout, IconHome, IconSettings } from '@tabler/icons-react';
 import type { User } from 'firebase/auth';
 import { DropdownMenu } from './DropdownMenu';
 import styles from './AppHeader.module.css';
@@ -13,25 +13,39 @@ interface Props {
 }
 
 export function AppHeader({ user, onSignOut, center }: Props) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <header className={styles.header}>
-      <Link to="/settings" className={styles.menuLink} aria-label="Settings">
-        <IconMenu2 size={24} />
-      </Link>
+      <div className={styles.navWrap}>
+        <button type="button" className={styles.menuButton} onClick={() => setNavOpen(o => !o)} aria-label="Menu">
+          <IconMenu2 size={24} />
+        </button>
+        {navOpen && (
+          <DropdownMenu
+            align="left"
+            onClose={() => setNavOpen(false)}
+            items={[
+              { label: 'Home', icon: <IconHome size={24} />, onClick: () => navigate('/') },
+              { label: 'Settings', icon: <IconSettings size={24} />, onClick: () => navigate('/settings') },
+            ]}
+          />
+        )}
+      </div>
       {center ?? <span className={styles.title}>SOCCER LINEUP</span>}
       <div className={styles.avatarWrap}>
-        <button type="button" className={styles.avatarButton} onClick={() => setMenuOpen(o => !o)} title={user.displayName ?? 'Account'}>
+        <button type="button" className={styles.avatarButton} onClick={() => setAvatarOpen(o => !o)} title={user.displayName ?? 'Account'}>
           {user.photoURL ? (
             <img className={styles.avatarImg} src={user.photoURL} alt="" />
           ) : (
             <span className={styles.avatarFallback}><IconUser size={20} /></span>
           )}
         </button>
-        {menuOpen && (
+        {avatarOpen && (
           <DropdownMenu
-            onClose={() => setMenuOpen(false)}
+            onClose={() => setAvatarOpen(false)}
             items={[{ label: 'Sign Out', icon: <IconLogout size={24} />, onClick: onSignOut }]}
           />
         )}

@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import type { User } from 'firebase/auth';
-import { IconArrowLeft, IconBrandAppleArcade } from '@tabler/icons-react';
+import { IconBrandAppleArcade } from '@tabler/icons-react';
 import { AppHeader } from '../../components/Shared/AppHeader';
 import { Stepper } from '../../components/Shared/Stepper';
 import { Button } from '../../components/Shared/Button';
@@ -34,9 +33,6 @@ export function SettingsPage({ user, onSignOut }: Props) {
       <AppHeader user={user} onSignOut={onSignOut} />
       <div className={subHeaderStyles.bar}>
         <div className={subHeaderStyles.left}>
-          <Link to="/" className={subHeaderStyles.backLink} aria-label="Back to Home">
-            <IconArrowLeft size={24} />
-          </Link>
           <span className={subHeaderStyles.name}>SETTINGS</span>
         </div>
       </div>

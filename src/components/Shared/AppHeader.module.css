@@ -14,7 +14,11 @@
   z-index: 40;
 }
 
-.menuLink {
+.navWrap {
+  position: relative;
+}
+
+.menuButton {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,6 +29,9 @@
   border-radius: var(--radius-lg);
   color: var(--color-text-primary);
   flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .title {

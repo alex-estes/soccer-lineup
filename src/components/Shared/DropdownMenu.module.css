@@ -16,6 +16,11 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
+.alignLeft {
+  left: 0;
+  right: auto;
+}
+
 .item {
   display: flex;
   align-items: center;

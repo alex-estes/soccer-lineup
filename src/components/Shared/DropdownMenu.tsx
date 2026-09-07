@@ -11,9 +11,10 @@ export interface DropdownItem {
 interface Props {
   items: DropdownItem[];
   onClose: () => void;
+  align?: 'left' | 'right';
 }
 
-export function DropdownMenu({ items, onClose }: Props) {
+export function DropdownMenu({ items, onClose, align = 'right' }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export function DropdownMenu({ items, onClose }: Props) {
   }, [onClose]);
 
   return (
-    <div className={styles.menu} ref={ref}>
+    <div className={[styles.menu, align === 'left' ? styles.alignLeft : ''].filter(Boolean).join(' ')} ref={ref}>
       {items.map(item => (
         <button
           key={item.label}
