@@ -69,6 +69,7 @@ export function SettingsPage({ user, onSignOut }: Props) {
             <IconSettings size={24} />
             <span>ADVANCED</span>
           </div>
+          <span className={styles.label}>Version {__APP_VERSION__}</span>
           <div className={styles.actionRow}>
             <Button variant="secondary" onClick={forceReload}>Refresh App</Button>
             <Button variant="danger" onClick={() => setResetOpen(true)}>Reset All App Data</Button>
