@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { User } from 'firebase/auth';
-import { AppHeader } from '../../components/Shared/AppHeader';
-import { GameSubHeader } from '../../components/Shared/GameSubHeader';
+import { GameHeader } from '../../components/Shared/GameHeader';
 import { Content } from '../../components/Content/Content';
 import { StickyFooter } from '../../components/Footer/StickyFooter';
 import { GoalsModal } from '../../components/Modals/GoalsModal';
+import { GameSettingsModal } from '../../components/Modals/GameSettingsModal';
 import { TeamRosterChecklist } from './TeamRosterChecklist';
 import { GameDayStats } from './GameDayStats';
 import { useAppState } from '../../state/AppContext';
@@ -19,11 +19,13 @@ interface Props {
   onSignOut: () => void;
 }
 
-export function GameDayPage({ user, onSignOut }: Props) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Props kept for the route element's type; GameDayPage no longer needs any of them.
+export function GameDayPage(_props: Props) {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { state, dispatch } = useAppState();
   const [goalsOpen, setGoalsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const game = gameId ? getGame(state.games, gameId) : undefined;
 
@@ -50,8 +52,12 @@ export function GameDayPage({ user, onSignOut }: Props) {
 
   return (
     <>
-      <AppHeader user={user} onSignOut={onSignOut} />
-      <GameSubHeader gameName={game.name} playedCount={playedCount} totalRotations={game.rotations.length} />
+      <GameHeader
+        gameName={game.name}
+        playedCount={playedCount}
+        totalRotations={game.rotations.length}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
       <main className={styles.content}>
         <Content />
         <GameDayStats game={game} />
@@ -59,6 +65,16 @@ export function GameDayPage({ user, onSignOut }: Props) {
       </main>
       <StickyFooter onOpenGoals={() => setGoalsOpen(true)} />
       <GoalsModal open={goalsOpen} onClose={() => setGoalsOpen(false)} />
+      <GameSettingsModal
+        key={settingsOpen ? 'open' : 'closed'}
+        open={settingsOpen}
+        game={game}
+        onClose={() => setSettingsOpen(false)}
+        onConfirm={formation => {
+          dispatch({ type: 'UPDATE_GAME_FORMATION', gameId: game.id, formation });
+          setSettingsOpen(false);
+        }}
+      />
     </>
   );
 }

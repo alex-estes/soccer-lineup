@@ -325,8 +325,14 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'UPDATE_FORMATION':
       return { ...state, settings: { ...state.settings, defaultFormation: action.formation } };
 
-    case 'UPDATE_GAME_FORMATION':
-      return updateGame(state, action.gameId, 'formation', action.formation);
+    case 'UPDATE_GAME_FORMATION': {
+      const game = getGame(state.games, action.gameId);
+      if (!game) return state;
+      const games = state.games.map(g =>
+        g.id === action.gameId ? { ...g, formation: action.formation, rotations: emptyRotations(action.formation) } : g
+      );
+      return { ...state, games };
+    }
 
     case 'RESET_ALL':
       return { ...initialState, isLoaded: true };
