@@ -2,7 +2,12 @@ import type { FormationSettings, Position } from './types';
 
 export const POSITIONS: Position[] = ['def', 'mid', 'fwd'];
 export const POS_LABELS: Record<Position, string> = { def: 'Defenders', mid: 'Midfielders', fwd: 'Forwards' };
-export const POS_COLORS: Record<Position, string> = { def: 'var(--def)', mid: 'var(--mid)', fwd: 'var(--fwd)' };
+// Matches the D/M/F color coding used everywhere else (stats table headers, etc.)
+export const POS_COLORS: Record<Position, string> = {
+  def: 'var(--blue-400)',
+  mid: 'var(--color-warning)',
+  fwd: 'var(--color-danger)',
+};
 export const NUM_ROT = 6;
 
 // Formation matches today's hardcoded 2 def / 2 mid / 2 fwd (6 on field) exactly —

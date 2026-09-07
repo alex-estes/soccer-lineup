@@ -1,4 +1,4 @@
-import { IconPlayerPlay, IconClock, IconTrophy, IconSquare, IconSquareCheckFilled } from '@tabler/icons-react';
+import { IconSquare, IconSquareCheckFilled } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
 import { Chip } from '../Shared/Chip';
@@ -23,7 +23,6 @@ export function RotationHeader({ rIdx, played, isCurrentRotation }: Props) {
       <div className={styles.titleGroup}>
         <span className={styles.title}>Rotation {rIdx + 1}</span>
         <Chip tone="neutral">
-          {played ? <IconTrophy size={12} /> : isCurrentRotation ? <IconPlayerPlay size={12} /> : <IconClock size={12} />}
           {played ? 'PLAYED' : isCurrentRotation ? 'CURRENT' : 'UPCOMING'}
         </Chip>
       </div>
