@@ -30,9 +30,13 @@ jobs:
 
       - run: npm ci
 
+      - name: Write version.json
+        run: echo "{\"sha\":\"${{ github.sha }}\"}" > public/version.json
+
       - run: npm run build
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_COMMIT_SHA: ${{ github.sha }}
 
       - uses: actions/configure-pages@v5
 

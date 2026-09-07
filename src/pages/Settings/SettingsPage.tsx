@@ -5,6 +5,7 @@ import { AppHeader } from '../../components/Shared/AppHeader';
 import { Stepper } from '../../components/Shared/Stepper';
 import { Button } from '../../components/Shared/Button';
 import { ConfirmDialog } from '../../components/Shared/ConfirmDialog';
+import { forceReload } from '../../lib/forceReload';
 import { useAppState } from '../../state/AppContext';
 import type { FormationSettings } from '../../types';
 import subHeaderStyles from '../../components/Shared/GameSubHeader.module.css';
@@ -69,6 +70,7 @@ export function SettingsPage({ user, onSignOut }: Props) {
             <span>ADVANCED</span>
           </div>
           <div className={styles.actionRow}>
+            <Button variant="secondary" onClick={forceReload}>Refresh App</Button>
             <Button variant="danger" onClick={() => setResetOpen(true)}>Reset All App Data</Button>
           </div>
         </section>

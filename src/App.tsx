@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { DocumentReference } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { LoadingOverlay } from './components/LoadingOverlay';
+import { UpdateBanner } from './components/UpdateBanner';
 import { SignInPage } from './components/SignInPage';
 import { HomePage } from './pages/Home/HomePage';
 import { GameDayPage } from './pages/GameDay/GameDayPage';
@@ -62,6 +63,7 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
+      <UpdateBanner />
       {!state.isLoaded && <LoadingOverlay />}
       <HashRouter>
         <Routes>
