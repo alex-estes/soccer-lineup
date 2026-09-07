@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { User } from 'firebase/auth';
-import { IconBrandAppleArcade } from '@tabler/icons-react';
+import { IconBrandAppleArcade, IconSettings } from '@tabler/icons-react';
 import { AppHeader } from '../../components/Shared/AppHeader';
 import { Stepper } from '../../components/Shared/Stepper';
 import { Button } from '../../components/Shared/Button';
@@ -63,16 +63,22 @@ export function SettingsPage({ user, onSignOut }: Props) {
           </div>
         </section>
 
-        <div className={styles.actionRow}>
-          <Button variant="danger" onClick={() => setResetOpen(true)}>Reset All</Button>
-        </div>
+        <section className={styles.section}>
+          <div className={styles.heading}>
+            <IconSettings size={24} />
+            <span>ADVANCED</span>
+          </div>
+          <div className={styles.actionRow}>
+            <Button variant="danger" onClick={() => setResetOpen(true)}>Reset All App Data</Button>
+          </div>
+        </section>
       </main>
 
       <ConfirmDialog
         open={resetOpen}
         title="RESET ALL"
         message="This permanently deletes your entire roster, all games, and all stats. This cannot be undone."
-        confirmLabel="Reset All"
+        confirmLabel="Reset All App Data"
         onConfirm={() => { dispatch({ type: 'RESET_ALL' }); setResetOpen(false); }}
         onCancel={() => setResetOpen(false)}
       />

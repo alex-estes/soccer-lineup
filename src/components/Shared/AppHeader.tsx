@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconMenu2, IconUser, IconLogout, IconHome, IconSettings } from '@tabler/icons-react';
+import { IconMenu, IconUser, IconLogout, IconHome, IconSettings } from '@tabler/icons-react';
 import type { User } from 'firebase/auth';
 import { DropdownMenu } from './DropdownMenu';
 import styles from './AppHeader.module.css';
@@ -21,7 +21,7 @@ export function AppHeader({ user, onSignOut, center }: Props) {
     <header className={styles.header}>
       <div className={styles.navWrap}>
         <button type="button" className={styles.menuButton} onClick={() => setNavOpen(o => !o)} aria-label="Menu">
-          <IconMenu2 size={24} />
+          <IconMenu size={24} />
         </button>
         {navOpen && (
           <DropdownMenu
