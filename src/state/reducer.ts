@@ -55,6 +55,9 @@ export type Action =
   | { type: 'RENAME_GAME'; gameId: string; name: string }
   | { type: 'DELETE_GAME'; gameId: string }
   | { type: 'TOGGLE_GAME_PLAYER_EXCLUDED'; gameId: string; playerName: string }
+  | { type: 'UPDATE_FORMATION'; formation: FormationSettings }
+  | { type: 'UPDATE_GAME_FORMATION'; gameId: string; formation: FormationSettings }
+  | { type: 'RESET_ALL' }
   | { type: 'LOAD_FROM_FIREBASE'; data: LegacyDoc };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -318,6 +321,15 @@ export function reducer(state: AppState, action: Action): AppState {
         : [...game.excludedPlayers, action.playerName];
       return updateGame(state, action.gameId, 'excludedPlayers', excludedPlayers);
     }
+
+    case 'UPDATE_FORMATION':
+      return { ...state, settings: { ...state.settings, defaultFormation: action.formation } };
+
+    case 'UPDATE_GAME_FORMATION':
+      return updateGame(state, action.gameId, 'formation', action.formation);
+
+    case 'RESET_ALL':
+      return { ...initialState, isLoaded: true };
 
     case 'LOAD_FROM_FIREBASE': {
       const migrated = migrateLegacyState(action.data, state);
