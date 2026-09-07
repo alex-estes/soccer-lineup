@@ -1,6 +1,8 @@
-import { IconCircleCheck, IconPlayerPlay, IconClock } from '@tabler/icons-react';
+import { IconPlayerPlay, IconClock, IconTrophy, IconSquare, IconSquareCheckFilled } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
+import { Chip } from '../Shared/Chip';
+import styles from './RotationHeader.module.css';
 
 interface Props {
   rIdx: number;
@@ -17,41 +19,33 @@ export function RotationHeader({ rIdx, played, isCurrentRotation }: Props) {
   const toggleDisabled = (!played && !prevPlayed) || (played && nextPlayed);
 
   return (
-    <div className="rotation-header">
-      <span className="rotation-num">Rotation {rIdx + 1}</span>
+    <div className={styles.row}>
+      <div className={styles.titleGroup}>
+        <span className={styles.title}>Rotation {rIdx + 1}</span>
+        <Chip tone="neutral">
+          {played ? <IconTrophy size={12} /> : isCurrentRotation ? <IconPlayerPlay size={12} /> : <IconClock size={12} />}
+          {played ? 'PLAYED' : isCurrentRotation ? 'CURRENT' : 'UPCOMING'}
+        </Chip>
+      </div>
 
-      {played ? (
-        <span className="played-badge">
-          <IconCircleCheck size={11} /> Played
-        </span>
-      ) : isCurrentRotation ? (
-        <span className="current-badge">
-          <IconPlayerPlay size={11} /> Current
-        </span>
-      ) : (
-        <span className="upcoming-badge">
-          <IconClock size={11} /> Upcoming
-        </span>
-      )}
-
-      <label
-        className={`played-toggle${played ? ' on' : ''}${toggleDisabled ? ' disabled' : ''}`}
-        style={{ opacity: toggleDisabled ? 0.35 : 1, cursor: toggleDisabled ? 'not-allowed' : 'pointer' }}
+      <button
+        type="button"
+        className={styles.markPlayed}
+        disabled={toggleDisabled}
+        onClick={() => dispatch({
+          type: 'SET_PLAYED',
+          gameId: state.curGame,
+          rotIndex: rIdx,
+          played: !played,
+        })}
       >
-        <input
-          type="checkbox"
-          checked={played}
-          disabled={toggleDisabled}
-          onChange={e => dispatch({
-            type: 'SET_PLAYED',
-            gameId: state.curGame,
-            rotIndex: rIdx,
-            played: e.target.checked,
-          })}
-        />
-        <span className="toggle-label">{played ? 'Played' : 'Mark Played'}</span>
-        <div className="toggle-track" />
-      </label>
+        <span className={[styles.markPlayedLabel, played ? styles.on : ''].filter(Boolean).join(' ')}>
+          {played ? 'PLAYED' : 'MARK PLAYED'}
+        </span>
+        <span className={[styles.markPlayedIcon, played ? styles.on : ''].filter(Boolean).join(' ')}>
+          {played ? <IconSquareCheckFilled size={24} /> : <IconSquare size={24} />}
+        </span>
+      </button>
     </div>
   );
 }

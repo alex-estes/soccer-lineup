@@ -1,0 +1,17 @@
+.scroller {
+  display: flex;
+  gap: var(--space-12);
+  width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.scroller > * {
+  width: 100%;
+  flex-shrink: 0;
+}

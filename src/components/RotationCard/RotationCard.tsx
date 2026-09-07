@@ -6,6 +6,7 @@ import { POSITIONS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
 import type { DragSource } from '../../types';
+import styles from './RotationCard.module.css';
 
 interface Props {
   rIdx: number;
@@ -25,20 +26,18 @@ export function RotationCard({ rIdx }: Props) {
   const isCurrentRotation = rIdx === currentRIdx;
 
   return (
-    <div className={`rotation-card${rot.played ? ' is-played' : ''}`}>
+    <div className={[styles.card, rot.played ? styles.played : ''].filter(Boolean).join(' ')} data-rotation-card>
       <RotationHeader rIdx={rIdx} played={rot.played} isCurrentRotation={isCurrentRotation} />
-      <div className="rotation-field">
-        {POSITIONS.map(pos => (
-          <PositionGroup
-            key={pos}
-            pos={pos}
-            rIdx={rIdx}
-            rot={rot}
-            isPlayed={rot.played}
-            dragRef={dragRef}
-          />
-        ))}
-      </div>
+      {POSITIONS.map(pos => (
+        <PositionGroup
+          key={pos}
+          pos={pos}
+          rIdx={rIdx}
+          rot={rot}
+          isPlayed={rot.played}
+          dragRef={dragRef}
+        />
+      ))}
       <BenchRow rIdx={rIdx} isPlayed={rot.played} dragRef={dragRef} />
     </div>
   );

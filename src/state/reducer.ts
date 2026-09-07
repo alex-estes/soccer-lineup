@@ -54,6 +54,7 @@ export type Action =
   | { type: 'SET_STATS_SCOPE'; scope: StatsScope }
   | { type: 'RENAME_GAME'; gameId: string; name: string }
   | { type: 'DELETE_GAME'; gameId: string }
+  | { type: 'TOGGLE_GAME_PLAYER_EXCLUDED'; gameId: string; playerName: string }
   | { type: 'LOAD_FROM_FIREBASE'; data: LegacyDoc };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -307,6 +308,15 @@ export function reducer(state: AppState, action: Action): AppState {
       }
 
       return { ...state, games, goals, curGame, swapSel: null, slotMenuSel: null };
+    }
+
+    case 'TOGGLE_GAME_PLAYER_EXCLUDED': {
+      const game = getGame(state.games, action.gameId);
+      if (!game) return state;
+      const excludedPlayers = game.excludedPlayers.includes(action.playerName)
+        ? game.excludedPlayers.filter(p => p !== action.playerName)
+        : [...game.excludedPlayers, action.playerName];
+      return updateGame(state, action.gameId, 'excludedPlayers', excludedPlayers);
     }
 
     case 'LOAD_FROM_FIREBASE': {

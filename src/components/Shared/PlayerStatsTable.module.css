@@ -9,6 +9,13 @@
   border-radius: var(--radius-lg);
 }
 
+.bare {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+}
+
 .row {
   display: flex;
   align-items: center;
@@ -59,6 +66,14 @@
 .fwd { color: var(--color-danger); }
 .played { color: var(--neutral-300); }
 .goals { color: var(--color-success); }
+
+.dim .player {
+  color: var(--color-text-disabled);
+}
+
+.dim .val {
+  color: var(--neutral-500) !important;
+}
 
 .empty {
   color: var(--neutral-400);

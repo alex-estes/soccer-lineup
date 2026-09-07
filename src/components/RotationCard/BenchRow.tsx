@@ -1,7 +1,10 @@
+import { useState } from 'react';
+import { IconArmchair } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { availablePlayersForGame, getGame } from '../../lib/utils';
 import { POSITIONS } from '../../constants';
 import type { DragSource } from '../../types';
+import styles from './BenchRow.module.css';
 
 interface Props {
   rIdx: number;
@@ -13,6 +16,7 @@ export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
   const { state, dispatch } = useAppState();
   const game = getGame(state.games, state.curGame);
   const rot = game?.rotations[rIdx];
+  const [dragTargetName, setDragTargetName] = useState<string | null>(null);
 
   if (!rot || !game) return null;
 
@@ -26,21 +30,26 @@ export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
   const swapSel = state.swapSel;
 
   return (
-    <div className="bench-row">
-      <span className="bench-label">Bench</span>
-      <div className="bench-slots">
+    <div className={styles.wrap}>
+      <div className={styles.label}>
+        <IconArmchair size={24} />
+        <span>BENCH</span>
+      </div>
+      <div className={styles.chips}>
         {displayedSlots.map(p => {
           const isFilled = benchNames.includes(p);
           const isSelected = !!(swapSel && swapSel.rIdx === rIdx && swapSel.playerName === p);
           const className = [
-            'bench-slot',
-            isFilled ? 'filled' : '',
-            isSelected ? 'swap-selected' : '',
+            styles.chip,
+            isFilled && !isPlayed ? styles.selectable : '',
+            isSelected ? styles.selected : '',
+            dragTargetName === p ? styles.dragTarget : '',
           ].filter(Boolean).join(' ');
 
           return (
             <div
               key={p}
+              data-bench-slot
               className={className}
               draggable={isFilled && !isPlayed}
               onDragStart={isFilled && !isPlayed ? e => {
@@ -54,11 +63,11 @@ export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
                   dispatch({ type: 'SET_SWAP_SEL', swapSel: { rIdx, playerName: p } });
                 }
               } : undefined}
-              onDragOver={!isPlayed ? e => { e.preventDefault(); e.currentTarget.classList.add('drag-target'); } : undefined}
-              onDragLeave={!isPlayed ? e => { e.currentTarget.classList.remove('drag-target'); } : undefined}
+              onDragOver={!isPlayed ? e => { e.preventDefault(); setDragTargetName(p); } : undefined}
+              onDragLeave={!isPlayed ? () => setDragTargetName(null) : undefined}
               onDrop={!isPlayed ? e => {
                 e.preventDefault();
-                e.currentTarget.classList.remove('drag-target');
+                setDragTargetName(null);
                 if (!dragRef.current) return;
                 dispatch({ type: 'DROP_PLAYER', drag: dragRef.current, target: { type: 'bench', rIdx } });
                 dragRef.current = null;

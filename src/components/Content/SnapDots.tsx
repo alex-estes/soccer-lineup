@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
+import styles from './SnapDots.module.css';
 
 interface Props {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -9,22 +10,15 @@ interface Props {
 export function SnapDots({ containerRef }: Props) {
   const { state } = useAppState();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 700);
 
   const numRotations = getGame(state.games, state.curGame)?.rotations.length ?? 0;
 
   useEffect(() => {
-    function checkMobile() { setIsMobile(window.innerWidth <= 700); }
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
     const container = containerRef.current;
-    if (!container || !isMobile) return;
+    if (!container) return;
 
     function updateDots() {
-      const cards = container!.querySelectorAll('.rotation-card');
+      const cards = container!.querySelectorAll('[data-rotation-card]');
       if (!cards.length) return;
       const containerLeft = container!.getBoundingClientRect().left;
       let closest = 0, minDist = Infinity;
@@ -37,14 +31,16 @@ export function SnapDots({ containerRef }: Props) {
 
     container.addEventListener('scroll', updateDots);
     return () => container.removeEventListener('scroll', updateDots);
-  }, [containerRef, isMobile]);
+  }, [containerRef]);
 
-  if (!isMobile || numRotations === 0) return null;
+  if (numRotations === 0) return null;
 
   return (
-    <div className="snap-dots">
+    <div className={styles.dots}>
       {Array.from({ length: numRotations }, (_, i) => (
-        <div key={i} className={`snap-dot${i === activeIndex ? ' active' : ''}`} />
+        <div key={i} className={styles.hit}>
+          <div className={[styles.dot, i === activeIndex ? styles.active : ''].filter(Boolean).join(' ')} />
+        </div>
       ))}
     </div>
   );

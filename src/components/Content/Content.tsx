@@ -1,34 +1,34 @@
-import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { IconRotateClockwise2, IconWand } from '@tabler/icons-react';
 import { RotationList } from './RotationList';
 import { useAppState } from '../../state/AppContext';
-import { getUnfilledCount } from '../../lib/stats';
-import { getGame } from '../../lib/utils';
+import { autoGenerateAction } from '../../state/reducer';
+import { availablePlayersForGame, getGame } from '../../lib/utils';
+import { IconButton } from '../Shared/IconButton';
+import styles from './Content.module.css';
 
 export function Content() {
-  const { state } = useAppState();
+  const { state, dispatch } = useAppState();
 
-  const rots = getGame(state.games, state.curGame)?.rotations ?? [];
-  const playedCount = rots.filter(r => r.played).length;
-  const rotLabel = playedCount === rots.length
-    ? 'Game Complete'
-    : `Rotation ${playedCount + 1} of ${rots.length}`;
-
-  const unfilled = useMemo(() => getUnfilledCount(state), [state.games, state.curGame]);
+  function handleGenerate() {
+    const game = getGame(state.games, state.curGame);
+    if (!game) return;
+    if (availablePlayersForGame(state.players, game).length < game.formation.playersOnField) {
+      alert(`Need at least ${game.formation.playersOnField} available players.`);
+      return;
+    }
+    dispatch(autoGenerateAction(state));
+  }
 
   return (
-    <main className="content">
-      <div className="content-header">
-        <Link to="/">&larr; Back</Link>
-        <h2>Rotation Schedule</h2>
-        <span className="rotation-label">{rotLabel}</span>
-      </div>
-      {unfilled > 0 && (
-        <div className="notice">
-          {unfilled} slot{unfilled !== 1 ? 's' : ''} unfilled in unplayed rotations. Hit Auto-Generate or drag players into position.
+    <section className={styles.section}>
+      <div className={styles.heading}>
+        <div className={styles.title}>
+          <IconRotateClockwise2 size={24} />
+          <span>ROTATIONS</span>
         </div>
-      )}
+        <IconButton variant="outline" icon={<IconWand size={24} />} title="Generate lineup" onClick={handleGenerate} />
+      </div>
       <RotationList />
-    </main>
+    </section>
   );
 }

@@ -1,7 +1,8 @@
-import { IconRefresh, IconBallFootball } from '@tabler/icons-react';
+import { IconBallFootball, IconTrophy } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
-import { autoGenerate } from '../../lib/autoGenerate';
-import { availablePlayersForGame, getGame } from '../../lib/utils';
+import { getGame } from '../../lib/utils';
+import { Button } from '../Shared/Button';
+import styles from './StickyFooter.module.css';
 
 interface Props {
   onOpenGoals: () => void;
@@ -9,26 +10,26 @@ interface Props {
 
 export function StickyFooter({ onOpenGoals }: Props) {
   const { state, dispatch } = useAppState();
+  const game = getGame(state.games, state.curGame);
+  if (!game) return null;
 
-  function handleGenerate() {
-    const game = getGame(state.games, state.curGame);
-    if (!game) return;
-    if (availablePlayersForGame(state.players, game).length < game.formation.playersOnField) {
-      alert(`Need at least ${game.formation.playersOnField} available players.`);
-      return;
-    }
-    const rotations = autoGenerate(state);
-    dispatch({ type: 'SET_LINEUP', gameId: state.curGame, rotations });
-  }
+  const allPlayed = game.rotations.length > 0 && game.rotations.every(r => r.played);
 
   return (
-    <div className="sticky-footer">
-      <button className="btn btn-primary" onClick={handleGenerate}>
-        <IconRefresh size={16} /> Generate Lineup
-      </button>
-      <button className="btn btn-secondary" onClick={onOpenGoals}>
-        <IconBallFootball size={16} /> Goals
-      </button>
+    <div className={styles.footer}>
+      {allPlayed && (
+        <Button
+          variant={game.completed ? 'primary' : 'secondary'}
+          onClick={() => dispatch({ type: 'COMPLETE_GAME', gameId: game.id })}
+        >
+          <IconTrophy size={24} />
+          {game.completed ? 'Completed' : 'Game Complete'}
+        </Button>
+      )}
+      <Button variant="primary" onClick={onOpenGoals}>
+        <IconBallFootball size={24} />
+        Goals
+      </Button>
     </div>
   );
 }

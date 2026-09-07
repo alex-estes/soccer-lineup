@@ -2,6 +2,7 @@ import { POSITIONS, POS_COLORS, POS_LABELS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
 import type { Position } from '../../types';
+import styles from './SlotDropdown.module.css';
 
 interface Props {
   rIdx: number;
@@ -37,16 +38,16 @@ export function SlotDropdown({ rIdx, pos, sIdx, playerName, opensUp }: Props) {
   }
 
   return (
-    <div className={`slot-dropdown ${opensUp ? 'opens-up' : 'opens-down'}`}>
+    <div data-slot-dropdown className={[styles.menu, opensUp ? styles.opensUp : styles.opensDown].join(' ')}>
       {options.map(({ tPos, tIdx, tName }) => (
         <div
           key={`${tPos}-${tIdx}`}
-          className="swap-option"
+          className={styles.option}
           onClick={e => { e.stopPropagation(); doSwap(tPos, tIdx); }}
         >
-          <div className="swap-pos-dot" style={{ background: POS_COLORS[tPos] }} />
-          <span>{tName}</span>
-          <span className="swap-pos-label">{POS_LABELS[tPos].slice(0, -1)}</span>
+          <div className={styles.dot} style={{ background: POS_COLORS[tPos] }} />
+          <span className={styles.name}>{tName}</span>
+          <span className={styles.posLabel}>{POS_LABELS[tPos].slice(0, -1)}</span>
         </div>
       ))}
     </div>

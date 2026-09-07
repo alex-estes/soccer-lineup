@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { User } from 'firebase/auth';
-import { Header } from '../../components/Header/Header';
+import { AppHeader } from '../../components/Shared/AppHeader';
+import { GameSubHeader } from '../../components/Shared/GameSubHeader';
 import { Content } from '../../components/Content/Content';
 import { StickyFooter } from '../../components/Footer/StickyFooter';
 import { GoalsModal } from '../../components/Modals/GoalsModal';
+import { TeamRosterChecklist } from './TeamRosterChecklist';
+import { GameDayStats } from './GameDayStats';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
 import type { SyncStatus } from '../../types';
+import styles from './GameDayPage.module.css';
 
 interface Props {
   syncStatus: SyncStatus;
@@ -15,10 +19,7 @@ interface Props {
   onSignOut: () => void;
 }
 
-// Phase 2 routing skeleton — functional, not yet styled to the Figma Game
-// Day design (rotation-card paging polish, formation-edit entry point,
-// team checklist land in a later pass).
-export function GameDayPage({ syncStatus, user, onSignOut }: Props) {
+export function GameDayPage({ user, onSignOut }: Props) {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { state, dispatch } = useAppState();
@@ -27,8 +28,8 @@ export function GameDayPage({ syncStatus, user, onSignOut }: Props) {
   const game = gameId ? getGame(state.games, gameId) : undefined;
 
   // The URL is the source of truth for "which game" — sync it into the
-  // reducer's curGame so the existing curGame-driven components (Header,
-  // Content, RotationCard, ...) keep working unchanged during this phase.
+  // reducer's curGame so the existing curGame-driven components (Content,
+  // RotationCard, ...) keep working unchanged.
   useEffect(() => {
     if (!gameId) return;
     if (!getGame(state.games, gameId)) { navigate('/', { replace: true }); return; }
@@ -45,12 +46,17 @@ export function GameDayPage({ syncStatus, user, onSignOut }: Props) {
 
   if (!game) return null;
 
+  const playedCount = game.rotations.filter(r => r.played).length;
+
   return (
     <>
-      <Header syncStatus={syncStatus} user={user} onSignOut={onSignOut} />
-      <div className={`main${state.isLoaded ? ' fade-in' : ''}`}>
+      <AppHeader user={user} onSignOut={onSignOut} />
+      <GameSubHeader gameName={game.name} playedCount={playedCount} totalRotations={game.rotations.length} />
+      <main className={styles.content}>
         <Content />
-      </div>
+        <GameDayStats game={game} />
+        <TeamRosterChecklist game={game} />
+      </main>
       <StickyFooter onOpenGoals={() => setGoalsOpen(true)} />
       <GoalsModal open={goalsOpen} onClose={() => setGoalsOpen(false)} />
     </>

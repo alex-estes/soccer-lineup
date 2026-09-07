@@ -1,0 +1,62 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.markPlayed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.markPlayed:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.markPlayedLabel {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--neutral-300);
+  white-space: nowrap;
+}
+
+.markPlayedLabel.on {
+  color: var(--color-brand-primary);
+}
+
+.markPlayedIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  color: var(--neutral-300);
+}
+
+.markPlayedIcon.on {
+  color: var(--color-brand-primary);
+}

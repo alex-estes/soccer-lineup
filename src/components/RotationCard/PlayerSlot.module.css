@@ -1,0 +1,83 @@
+.slot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-8) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+
+.slot.empty {
+  border-style: dashed;
+}
+
+.slot.swapTarget {
+  border-color: var(--color-brand-primary);
+  cursor: pointer;
+}
+
+.slot.dragTarget {
+  border-color: var(--color-brand-primary);
+  background: var(--teal-900);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.name {
+  flex: 1 0 0;
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyLabel {
+  flex: 1 0 0;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-disabled);
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  border: none;
+  color: var(--neutral-300);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.iconBtn.locked {
+  color: var(--color-brand-primary);
+}
+
+.iconBtn.active {
+  color: var(--color-brand-primary);
+  background: var(--color-bg-base);
+}
+
+.menuWrap {
+  position: relative;
+}

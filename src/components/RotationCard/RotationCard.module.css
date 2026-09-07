@@ -1,0 +1,18 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  align-items: flex-start;
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+.played {
+  border-color: var(--teal-700);
+}
+

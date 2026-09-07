@@ -1,9 +1,10 @@
-import { useRef } from 'react';
-import { IconLock, IconLockOpen, IconReplaceUser } from '@tabler/icons-react';
+import { useRef, useState } from 'react';
+import { IconLock, IconLockOpen, IconReplace } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { SlotDropdown } from './SlotDropdown';
 import { getGame } from '../../lib/utils';
 import type { Position, DragSource } from '../../types';
+import styles from './PlayerSlot.module.css';
 
 interface Props {
   rIdx: number;
@@ -18,6 +19,7 @@ interface Props {
 export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, dragRef }: Props) {
   const { state, dispatch } = useAppState();
   const slotRef = useRef<HTMLDivElement>(null);
+  const [dragTarget, setDragTarget] = useState(false);
 
   const swapSel = state.swapSel;
   const slotMenuSel = state.slotMenuSel;
@@ -26,10 +28,10 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
 
   const filled = !!playerName;
   const classes = [
-    'slot', pos,
-    filled ? 'filled' : '',
-    locked ? 'locked' : '',
-    isSwapTarget ? 'swap-target' : '',
+    styles.slot,
+    !filled ? styles.empty : '',
+    isSwapTarget ? styles.swapTarget : '',
+    dragTarget ? styles.dragTarget : '',
   ].filter(Boolean).join(' ');
 
   function handleDragStart(e: React.DragEvent) {
@@ -40,16 +42,16 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault();
-    slotRef.current?.classList.add('drag-target');
+    setDragTarget(true);
   }
 
   function handleDragLeave() {
-    slotRef.current?.classList.remove('drag-target');
+    setDragTarget(false);
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
-    slotRef.current?.classList.remove('drag-target');
+    setDragTarget(false);
     if (!dragRef.current) return;
     dispatch({ type: 'DROP_PLAYER', drag: dragRef.current, target: { type: 'slot', rIdx, pos, sIdx } });
     dragRef.current = null;
@@ -82,6 +84,7 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
   return (
     <div
       ref={slotRef}
+      data-swap-target={isSwapTarget ? '' : undefined}
       className={classes}
       onClick={isSwapTarget ? handleSwapTargetClick : undefined}
       onDragOver={!isPlayed ? handleDragOver : undefined}
@@ -89,49 +92,50 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
       onDrop={!isPlayed ? handleDrop : undefined}
     >
       {playerName ? (
-        <div
-          className="slot-inner"
-          draggable={!isPlayed && !locked}
-          onDragStart={handleDragStart}
-        >
+        <div className={styles.inner} draggable={!isPlayed && !locked} onDragStart={handleDragStart}>
           <button
-            className="lock-btn"
+            type="button"
+            className={[styles.iconBtn, locked ? styles.locked : ''].filter(Boolean).join(' ')}
             title={locked ? 'Unlock slot' : 'Lock slot'}
             onClick={e => {
               e.stopPropagation();
               dispatch({ type: 'TOGGLE_LOCK', gameId: state.curGame, rotIndex: rIdx, pos, slotIndex: sIdx });
             }}
           >
-            {locked ? <IconLock size={12} /> : <IconLockOpen size={12} />}
+            {locked ? <IconLock size={24} /> : <IconLockOpen size={24} />}
           </button>
-          <span className="slot-name">{playerName}</span>
+          <span className={styles.name}>{playerName}</span>
           {!isPlayed && !locked && (
-            <button
-              className={`swap-btn${isMenuOpen ? ' active' : ''}`}
-              title="Swap player"
-              onClick={e => {
-                e.stopPropagation();
-                dispatch({
-                  type: 'SET_SLOT_MENU',
-                  slotMenuSel: isMenuOpen ? null : { rIdx, pos, sIdx },
-                });
-              }}
-            >
-              <IconReplaceUser size={14} />
-            </button>
-          )}
-          {isMenuOpen && !isPlayed && (
-            <SlotDropdown
-              rIdx={rIdx}
-              pos={pos}
-              sIdx={sIdx}
-              playerName={playerName}
-              opensUp={pos !== 'def'}
-            />
+            <div className={styles.menuWrap}>
+              <button
+                type="button"
+                data-swap-btn
+                className={[styles.iconBtn, isMenuOpen ? styles.active : ''].filter(Boolean).join(' ')}
+                title="Swap player"
+                onClick={e => {
+                  e.stopPropagation();
+                  dispatch({
+                    type: 'SET_SLOT_MENU',
+                    slotMenuSel: isMenuOpen ? null : { rIdx, pos, sIdx },
+                  });
+                }}
+              >
+                <IconReplace size={24} />
+              </button>
+              {isMenuOpen && (
+                <SlotDropdown
+                  rIdx={rIdx}
+                  pos={pos}
+                  sIdx={sIdx}
+                  playerName={playerName}
+                  opensUp={pos !== 'def'}
+                />
+              )}
+            </div>
           )}
         </div>
       ) : (
-        <span className="slot-empty">Drop here</span>
+        <span className={styles.emptyLabel}>Empty Slot</span>
       )}
     </div>
   );

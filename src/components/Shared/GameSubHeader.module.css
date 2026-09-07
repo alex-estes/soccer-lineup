@@ -1,0 +1,50 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-4) var(--space-16) var(--space-4) var(--space-8);
+  background: var(--color-bg-surface);
+  border-bottom: 2px solid var(--color-border-default);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+}
+
+.name {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+  color: var(--color-text-primary);
+}
+
+.right span {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+}

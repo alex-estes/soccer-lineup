@@ -1,0 +1,73 @@
+.card {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  width: 100%;
+}
+
+.name {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+}
+
+.opponentSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+  padding-top: var(--space-8);
+  border-top: 2px solid var(--color-border-default);
+}
+
+.opponentLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+}
+
+.statusBar {
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+}
+
+.win {
+  background: var(--teal-900);
+  color: var(--color-brand-primary);
+}
+
+.loss {
+  background: var(--red-loss-bg);
+  color: var(--red-300);
+}
+
+.tie {
+  background: var(--neutral-700);
+  color: var(--neutral-300);
+}

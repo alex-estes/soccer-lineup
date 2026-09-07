@@ -39,7 +39,7 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
     if (!state.swapSel) return;
     function handleClick(e: MouseEvent) {
       const t = e.target as Element;
-      if (!t.closest('.bench-slot') && !t.closest('.swap-target')) {
+      if (!t.closest('[data-bench-slot]') && !t.closest('[data-swap-target]')) {
         dispatch({ type: 'SET_SWAP_SEL', swapSel: null });
       }
     }
@@ -52,7 +52,7 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
     if (!state.slotMenuSel) return;
     function handleClick(e: MouseEvent) {
       const t = e.target as Element;
-      if (!t.closest('.swap-btn') && !t.closest('.slot-dropdown')) {
+      if (!t.closest('[data-swap-btn]') && !t.closest('[data-slot-dropdown]')) {
         dispatch({ type: 'SET_SLOT_MENU', slotMenuSel: null });
       }
     }
