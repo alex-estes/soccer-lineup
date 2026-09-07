@@ -1,5 +1,5 @@
 import { useAppState } from '../../state/AppContext';
-import { activePlayers } from '../../lib/utils';
+import { availablePlayersForGame, getGame } from '../../lib/utils';
 import { POSITIONS } from '../../constants';
 import type { DragSource } from '../../types';
 
@@ -11,15 +11,16 @@ interface Props {
 
 export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
   const { state, dispatch } = useAppState();
-  const rot = state.games[state.curGame]?.rotations[rIdx];
+  const game = getGame(state.games, state.curGame);
+  const rot = game?.rotations[rIdx];
 
-  if (!rot) return null;
+  if (!rot || !game) return null;
 
   const onField = new Set<string>();
   POSITIONS.forEach(pos => rot[pos].forEach(p => { if (p) onField.add(p); }));
 
   const benchNames = rot.bench;
-  const available = activePlayers(state.players).filter(p => !onField.has(p) && !benchNames.includes(p));
+  const available = availablePlayersForGame(state.players, game).filter(p => !onField.has(p) && !benchNames.includes(p));
   const displayedSlots = [...benchNames, ...available];
 
   const swapSel = state.swapSel;

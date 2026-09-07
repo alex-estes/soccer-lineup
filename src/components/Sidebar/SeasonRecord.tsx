@@ -9,11 +9,10 @@ export function SeasonRecord() {
   const record = useMemo(() => getSeasonRecord(state), [state.games, state.goals, state.players]);
 
   const completedGames = useMemo(() =>
-    state.games.filter(g => g.completed).map((g, _) => {
-      const gIdx = state.games.indexOf(g);
-      const us = getTeamScore(state, gIdx);
+    state.games.filter(g => g.completed).map(g => {
+      const us = getTeamScore(state, g.id);
       const them = g.opponentScore || 0;
-      const result = getGameResult(state, gIdx);
+      const result = getGameResult(state, g.id);
       return { name: g.name, us, them, result };
     }),
     [state.games, state.goals, state.players]

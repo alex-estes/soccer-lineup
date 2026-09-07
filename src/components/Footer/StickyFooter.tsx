@@ -1,8 +1,7 @@
 import { IconRefresh, IconBallFootball } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { autoGenerate } from '../../lib/autoGenerate';
-import { activePlayers } from '../../lib/utils';
-import { FIELD_SIZE } from '../../constants';
+import { availablePlayersForGame, getGame } from '../../lib/utils';
 
 interface Props {
   onOpenGoals: () => void;
@@ -12,12 +11,14 @@ export function StickyFooter({ onOpenGoals }: Props) {
   const { state, dispatch } = useAppState();
 
   function handleGenerate() {
-    if (activePlayers(state.players).length < FIELD_SIZE) {
-      alert('Need at least 6 active players.');
+    const game = getGame(state.games, state.curGame);
+    if (!game) return;
+    if (availablePlayersForGame(state.players, game).length < game.formation.playersOnField) {
+      alert(`Need at least ${game.formation.playersOnField} available players.`);
       return;
     }
     const rotations = autoGenerate(state);
-    dispatch({ type: 'SET_LINEUP', gameIndex: state.curGame, rotations });
+    dispatch({ type: 'SET_LINEUP', gameId: state.curGame, rotations });
   }
 
   return (

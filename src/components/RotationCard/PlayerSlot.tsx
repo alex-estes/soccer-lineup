@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { IconLock, IconLockOpen, IconReplaceUser } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { SlotDropdown } from './SlotDropdown';
+import { getGame } from '../../lib/utils';
 import type { Position, DragSource } from '../../types';
 
 interface Props {
@@ -57,8 +58,9 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
   function handleSwapTargetClick(e: React.MouseEvent) {
     if (!isSwapTarget || !swapSel) return;
     e.stopPropagation();
-    const rot = state.games[state.curGame]?.rotations[rIdx];
-    if (!rot) return;
+    const game = getGame(state.games, state.curGame);
+    const rot = game?.rotations[rIdx];
+    if (!game || !rot) return;
     const benchName = swapSel.playerName;
     const fieldName = rot[pos][sIdx];
     const newRot = {
@@ -71,8 +73,8 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
     };
     dispatch({
       type: 'SET_LINEUP',
-      gameIndex: state.curGame,
-      rotations: state.games[state.curGame].rotations.map((r, i) => i === rIdx ? newRot : r),
+      gameId: state.curGame,
+      rotations: game.rotations.map((r, i) => i === rIdx ? newRot : r),
     });
     dispatch({ type: 'SET_SWAP_SEL', swapSel: null });
   }
@@ -97,7 +99,7 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
             title={locked ? 'Unlock slot' : 'Lock slot'}
             onClick={e => {
               e.stopPropagation();
-              dispatch({ type: 'TOGGLE_LOCK', gameIndex: state.curGame, rotIndex: rIdx, pos, slotIndex: sIdx });
+              dispatch({ type: 'TOGGLE_LOCK', gameId: state.curGame, rotIndex: rIdx, pos, slotIndex: sIdx });
             }}
           >
             {locked ? <IconLock size={12} /> : <IconLockOpen size={12} />}

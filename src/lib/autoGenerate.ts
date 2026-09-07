@@ -1,6 +1,6 @@
-import { POSITIONS, FIELD_SIZE } from '../constants';
+import { POSITIONS } from '../constants';
 import type { AppState, Position, Rotation } from '../types';
-import { activePlayers, ensureShape, shuffleArr } from './utils';
+import { availablePlayersForGame, ensureShape, getGame, shuffleArr } from './utils';
 
 interface Counts {
   def: number;
@@ -16,14 +16,17 @@ interface Counts {
  * Avoids benching the same player two rotations in a row when possible.
  */
 export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGame'>): Rotation[] {
-  const active = activePlayers(state.players);
-  if (active.length < FIELD_SIZE) return state.games[state.curGame].rotations;
+  const game = getGame(state.games, state.curGame);
+  if (!game) return [];
+
+  const available = availablePlayersForGame(state.players, game);
+  if (available.length < game.formation.playersOnField) return game.rotations;
 
   // Counts from PLAYED rotations in the current game only
   const counts: Record<string, Counts> = {};
-  active.forEach(p => { counts[p] = { def: 0, mid: 0, fwd: 0, total: 0 }; });
+  available.forEach(p => { counts[p] = { def: 0, mid: 0, fwd: 0, total: 0 }; });
 
-  state.games[state.curGame].rotations.forEach(rot => {
+  game.rotations.forEach(rot => {
     ensureShape(rot);
     if (!rot.played) return;
     POSITIONS.forEach(pos => {
@@ -34,16 +37,16 @@ export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGam
   });
 
   // Deep-clone the current game's rotations so we don't mutate state
-  const rotations: Rotation[] = state.games[state.curGame].rotations.map(r => ({
+  const rotations: Rotation[] = game.rotations.map(r => ({
     ...r,
-    def: [...r.def] as [string | null, string | null],
-    mid: [...r.mid] as [string | null, string | null],
-    fwd: [...r.fwd] as [string | null, string | null],
+    def: [...r.def],
+    mid: [...r.mid],
+    fwd: [...r.fwd],
     bench: [...r.bench],
     locked: {
-      def: [...r.locked.def] as [boolean, boolean],
-      mid: [...r.locked.mid] as [boolean, boolean],
-      fwd: [...r.locked.fwd] as [boolean, boolean],
+      def: [...r.locked.def],
+      mid: [...r.locked.mid],
+      fwd: [...r.locked.fwd],
     },
   }));
 
@@ -81,13 +84,13 @@ export function autoGenerate(state: Pick<AppState, 'players' | 'games' | 'curGam
       });
     });
 
-    const available = active.filter(p => !lockedNames.has(p));
-    const benchSize = Math.max(0, available.length - openSlots.length);
+    const fieldable = available.filter(p => !lockedNames.has(p));
+    const benchSize = Math.max(0, fieldable.length - openSlots.length);
 
     // Sort: most-played players bench first.
     // Tie-break: players who were benched last rotation sort later (bench last) to avoid
     // consecutive bench. Shuffle first so equal-count ties break randomly.
-    const sorted = shuffleArr([...available]).sort((a, b) => {
+    const sorted = shuffleArr([...fieldable]).sort((a, b) => {
       const playDiff = counts[b].total - counts[a].total;
       if (playDiff !== 0) return playDiff;
       // Among equal total plays, push previously-benched players toward the field

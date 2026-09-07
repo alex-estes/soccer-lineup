@@ -1,5 +1,6 @@
 import { POSITIONS, POS_COLORS, POS_LABELS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
+import { getGame } from '../../lib/utils';
 import type { Position } from '../../types';
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 
 export function SlotDropdown({ rIdx, pos, sIdx, playerName, opensUp }: Props) {
   const { state, dispatch } = useAppState();
-  const rot = state.games[state.curGame]?.rotations[rIdx];
+  const rot = getGame(state.games, state.curGame)?.rotations[rIdx];
   if (!rot) return null;
 
   const options: { tPos: Position; tIdx: number; tName: string }[] = [];

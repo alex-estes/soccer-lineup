@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { setDoc, onSnapshot, type DocumentReference } from 'firebase/firestore';
 import { autoGenerate } from '../lib/autoGenerate';
 import type { Action } from '../state/reducer';
+import { migrateLegacyState, type LegacyDoc } from '../state/migrateLegacyState';
 import type { AppState, SyncStatus } from '../types';
 
 const ECHO_WINDOW_MS = 2000;
@@ -18,24 +19,32 @@ export function useFirebaseSync(state: AppState, dispatch: Dispatch<Action>, lin
 
   // Listen for remote changes
   useEffect(() => {
+    // Computes what LOAD_FROM_FIREBASE will turn `data` into (against the
+    // current ref state) so a follow-up auto-generate targets the right
+    // game by id — dispatch is async, so stateRef.current right after
+    // dispatching LOAD_FROM_FIREBASE would still be the pre-migration state.
+    function loadAndAutoGenerate(data: LegacyDoc) {
+      const migrated = migrateLegacyState(data, stateRef.current);
+      dispatch({ type: 'LOAD_FROM_FIREBASE', data });
+      const rotations = autoGenerate(migrated);
+      dispatch({ type: 'SET_LINEUP', gameId: migrated.curGame, rotations });
+    }
+
     const unsub = onSnapshot(lineupDoc, snap => {
       if (isInitialLoadRef.current) {
         isInitialLoadRef.current = false;
 
         if (!snap.exists()) {
           // Nothing saved yet — load defaults, then auto-generate
-          dispatch({ type: 'LOAD_FROM_FIREBASE', data: {} });
-          const currentState = stateRef.current;
-          const rotations = autoGenerate(currentState);
-          dispatch({ type: 'SET_LINEUP', gameIndex: currentState.curGame, rotations });
+          loadAndAutoGenerate({});
           return;
         }
 
         const data = snap.data();
-        const hasData = Array.isArray(data.games) && (data.games as AppState['games']).some(g =>
-          g.rotations && g.rotations.some(r =>
+        const hasData = Array.isArray(data.games) && (data.games as unknown[]).some(g =>
+          (g as { rotations?: unknown[] }).rotations?.some(r =>
             ['def', 'mid', 'fwd'].some(pos => {
-              const slots = (r as unknown as Record<string, (string | null)[]>)[pos];
+              const slots = (r as Record<string, unknown>)[pos];
               return Array.isArray(slots) && slots.some(Boolean);
             })
           )
@@ -47,11 +56,8 @@ export function useFirebaseSync(state: AppState, dispatch: Dispatch<Action>, lin
           dispatch({ type: 'LOAD_FROM_FIREBASE', data });
           setTimeout(() => { lastSaveTimeRef.current = 0; }, ECHO_WINDOW_MS);
         } else {
-          // Data document exists but no real lineup data — treat as empty
-          dispatch({ type: 'LOAD_FROM_FIREBASE', data });
-          const currentState = stateRef.current;
-          const rotations = autoGenerate(currentState);
-          dispatch({ type: 'SET_LINEUP', gameIndex: currentState.curGame, rotations });
+          // Data document exists but no real lineup data — treat as empty, then auto-generate
+          loadAndAutoGenerate(data);
         }
         return;
       }
@@ -73,8 +79,8 @@ export function useFirebaseSync(state: AppState, dispatch: Dispatch<Action>, lin
     saveTimerRef.current = setTimeout(() => {
       setSyncStatus('saving');
       lastSaveTimeRef.current = Date.now();
-      const { players, goals, games, curGame } = state;
-      setDoc(lineupDoc, { players, goals, games, curGame })
+      const { players, goals, games, curGame, settings, schemaVersion } = state;
+      setDoc(lineupDoc, { players, goals, games, curGame, settings, schemaVersion })
         .then(() => setSyncStatus('saved'))
         .catch(() => setSyncStatus('error'));
     }, DEBOUNCE_MS);
@@ -82,7 +88,7 @@ export function useFirebaseSync(state: AppState, dispatch: Dispatch<Action>, lin
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [state.players, state.goals, state.games, state.curGame, state.isLoaded]);
+  }, [state.players, state.goals, state.games, state.curGame, state.settings, state.schemaVersion, state.isLoaded]);
 
   return syncStatus;
 }

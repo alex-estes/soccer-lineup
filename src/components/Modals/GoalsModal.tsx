@@ -1,6 +1,7 @@
 import { IconBallFootball, IconMinus, IconPlus, IconShield, IconTrophy } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { getTeamScore } from '../../lib/stats';
+import { getGame } from '../../lib/utils';
 
 interface Props {
   open: boolean;
@@ -10,24 +11,24 @@ interface Props {
 export function GoalsModal({ open, onClose }: Props) {
   const { state, dispatch } = useAppState();
 
-  const game = state.games[state.curGame];
+  const game = getGame(state.games, state.curGame);
   if (!game || !open) return null;
 
-  const gIdx = state.curGame;
-  const teamScore = getTeamScore(state, gIdx);
+  const gameId = game.id;
+  const teamScore = getTeamScore(state, gameId);
   const opponentScore = game.opponentScore || 0;
 
   function getGoalCount(name: string): number {
-    return state.goals[name]?.[gIdx] ?? 0;
+    return state.goals[name]?.[gameId] ?? 0;
   }
 
   function adjGoal(name: string, delta: number) {
     const current = getGoalCount(name);
-    dispatch({ type: 'SET_GOALS', playerName: name, gameIndex: gIdx, count: current + delta });
+    dispatch({ type: 'SET_GOALS', playerName: name, gameId, count: current + delta });
   }
 
   function adjOpponent(delta: number) {
-    dispatch({ type: 'SET_OPPONENT_SCORE', gameIndex: gIdx, score: opponentScore + delta });
+    dispatch({ type: 'SET_OPPONENT_SCORE', gameId, score: opponentScore + delta });
   }
 
   const allPlayed = game.rotations.every(r => r.played);
@@ -90,7 +91,7 @@ export function GoalsModal({ open, onClose }: Props) {
           {allPlayed && (
             <button
               className={`btn ${game.completed ? 'btn-secondary' : 'btn-primary'}`}
-              onClick={() => dispatch({ type: 'COMPLETE_GAME', gameIndex: gIdx })}
+              onClick={() => dispatch({ type: 'COMPLETE_GAME', gameId })}
             >
               <IconTrophy size={16} />
               {game.completed ? ' Completed' : ' Complete Game'}

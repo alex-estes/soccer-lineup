@@ -3,6 +3,7 @@ import { GameTabs } from './GameTabs';
 import { RotationList } from './RotationList';
 import { useAppState } from '../../state/AppContext';
 import { getUnfilledCount } from '../../lib/stats';
+import { getGame } from '../../lib/utils';
 
 interface Props {
   onNewGame: () => void;
@@ -11,7 +12,7 @@ interface Props {
 export function Content({ onNewGame }: Props) {
   const { state } = useAppState();
 
-  const rots = state.games[state.curGame]?.rotations ?? [];
+  const rots = getGame(state.games, state.curGame)?.rotations ?? [];
   const playedCount = rots.filter(r => r.played).length;
   const rotLabel = playedCount === rots.length
     ? 'Game Complete'

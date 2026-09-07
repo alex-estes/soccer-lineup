@@ -2,12 +2,13 @@ import { useRef } from 'react';
 import { RotationCard } from '../RotationCard/RotationCard';
 import { SnapDots } from './SnapDots';
 import { useAppState } from '../../state/AppContext';
+import { getGame } from '../../lib/utils';
 
 export function RotationList() {
   const { state } = useAppState();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const rotations = state.games[state.curGame]?.rotations ?? [];
+  const rotations = getGame(state.games, state.curGame)?.rotations ?? [];
 
   return (
     <>

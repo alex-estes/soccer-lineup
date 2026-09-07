@@ -1,4 +1,4 @@
-import { POS_COLORS, POS_LABELS, SLOTS_PER } from '../../constants';
+import { POS_COLORS, POS_LABELS } from '../../constants';
 import { PlayerSlot } from './PlayerSlot';
 import type { Position, Rotation, DragSource } from '../../types';
 
@@ -18,7 +18,7 @@ export function PositionGroup({ pos, rIdx, rot, isPlayed, dragRef }: Props) {
         {POS_LABELS[pos]}
       </div>
       <div className="position-slots">
-        {Array.from({ length: SLOTS_PER }, (_, sIdx) => (
+        {rot[pos].map((_, sIdx) => (
           <PlayerSlot
             key={sIdx}
             rIdx={rIdx}

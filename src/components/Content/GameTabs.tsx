@@ -8,43 +8,43 @@ interface Props {
 
 export function GameTabs({ onNewGame }: Props) {
   const { state, dispatch } = useAppState();
-  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function startEditing(i: number) {
-    setEditingIdx(i);
-    setEditValue(state.games[i].name);
+  function startEditing(id: string, currentName: string) {
+    setEditingId(id);
+    setEditValue(currentName);
     setTimeout(() => inputRef.current?.select(), 0);
   }
 
   function commitEdit() {
-    if (editingIdx !== null) {
-      dispatch({ type: 'RENAME_GAME', gameIndex: editingIdx, name: editValue });
+    if (editingId !== null) {
+      dispatch({ type: 'RENAME_GAME', gameId: editingId, name: editValue });
     }
-    setEditingIdx(null);
+    setEditingId(null);
   }
 
   function cancelEdit() {
-    setEditingIdx(null);
+    setEditingId(null);
   }
 
-  function handleDelete(i: number) {
-    if (!confirm(`Delete "${state.games[i].name}"? This cannot be undone.`)) return;
-    dispatch({ type: 'DELETE_GAME', gameIndex: i });
+  function handleDelete(id: string, name: string) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    dispatch({ type: 'DELETE_GAME', gameId: id });
   }
 
   return (
     <div className="game-tabs">
-      {state.games.map((g, i) => {
-        const isActive = i === state.curGame;
-        const isEditing = editingIdx === i;
+      {state.games.map(g => {
+        const isActive = g.id === state.curGame;
+        const isEditing = editingId === g.id;
 
         return (
           <div
-            key={i}
+            key={g.id}
             className={`game-tab${isActive ? ' active' : ''}`}
-            onClick={() => { if (!isActive) dispatch({ type: 'SET_CUR_GAME', index: i }); }}
+            onClick={() => { if (!isActive) dispatch({ type: 'SET_CUR_GAME', id: g.id }); }}
           >
             {isEditing ? (
               <input
@@ -68,7 +68,7 @@ export function GameTabs({ onNewGame }: Props) {
                 <button
                   className="game-tab-icon-btn"
                   title="Rename game"
-                  onClick={() => startEditing(i)}
+                  onClick={() => startEditing(g.id, g.name)}
                 >
                   <IconPencil size={11} />
                 </button>
@@ -76,7 +76,7 @@ export function GameTabs({ onNewGame }: Props) {
                   <button
                     className="game-tab-icon-btn game-tab-icon-btn--danger"
                     title="Delete game"
-                    onClick={() => handleDelete(i)}
+                    onClick={() => handleDelete(g.id, g.name)}
                   >
                     <IconTrash size={11} />
                   </button>

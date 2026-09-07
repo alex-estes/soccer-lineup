@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppState } from '../../state/AppContext';
+import { getGame } from '../../lib/utils';
 
 interface Props {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -10,7 +11,7 @@ export function SnapDots({ containerRef }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 700);
 
-  const numRotations = state.games[state.curGame]?.rotations.length ?? 0;
+  const numRotations = getGame(state.games, state.curGame)?.rotations.length ?? 0;
 
   useEffect(() => {
     function checkMobile() { setIsMobile(window.innerWidth <= 700); }

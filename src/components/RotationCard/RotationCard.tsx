@@ -4,6 +4,7 @@ import { PositionGroup } from './PositionGroup';
 import { BenchRow } from './BenchRow';
 import { POSITIONS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
+import { getGame } from '../../lib/utils';
 import type { DragSource } from '../../types';
 
 interface Props {
@@ -12,13 +13,14 @@ interface Props {
 
 export function RotationCard({ rIdx }: Props) {
   const { state } = useAppState();
-  const rot = state.games[state.curGame]?.rotations[rIdx];
+  const game = getGame(state.games, state.curGame);
+  const rot = game?.rotations[rIdx];
   // Shared drag state — passed as ref so it doesn't cause re-renders
   const dragRef = useRef<DragSource | null>(null);
 
-  if (!rot) return null;
+  if (!rot || !game) return null;
 
-  const rots = state.games[state.curGame].rotations;
+  const rots = game.rotations;
   const currentRIdx = rots.findIndex(r => !r.played);
   const isCurrentRotation = rIdx === currentRIdx;
 

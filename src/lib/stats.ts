@@ -1,9 +1,9 @@
 import { POSITIONS } from '../constants';
 import type { AppState, PlayerStats, StatsMap } from '../types';
-import { ensureShape } from './utils';
+import { ensureShape, getGame } from './utils';
 
-function getGoals(goals: AppState['goals'], name: string, gIdx: number): number {
-  return goals[name]?.[gIdx] ?? 0;
+function getGoals(goals: AppState['goals'], name: string, gameId: string): number {
+  return goals[name]?.[gameId] ?? 0;
 }
 
 export function totalGoals(goals: AppState['goals'], name: string): number {
@@ -11,18 +11,18 @@ export function totalGoals(goals: AppState['goals'], name: string): number {
   return Object.values(goals[name]).reduce((a, b) => a + b, 0);
 }
 
-export function getTeamScore(state: Pick<AppState, 'games' | 'goals' | 'players'>, gIdx: number): number {
+export function getTeamScore(state: Pick<AppState, 'games' | 'goals' | 'players'>, gameId: string): number {
   let total = 0;
   state.players
     .filter(p => p.active)
-    .forEach(p => { total += getGoals(state.goals, p.name, gIdx); });
+    .forEach(p => { total += getGoals(state.goals, p.name, gameId); });
   return total;
 }
 
-export function getGameResult(state: Pick<AppState, 'games' | 'goals' | 'players'>, gIdx: number): 'W' | 'L' | 'T' | null {
-  const g = state.games[gIdx];
+export function getGameResult(state: Pick<AppState, 'games' | 'goals' | 'players'>, gameId: string): 'W' | 'L' | 'T' | null {
+  const g = getGame(state.games, gameId);
   if (!g || !g.completed) return null;
-  const us = getTeamScore(state, gIdx);
+  const us = getTeamScore(state, gameId);
   const them = g.opponentScore || 0;
   if (us > them) return 'W';
   if (us < them) return 'L';
@@ -33,7 +33,7 @@ export function getGameStats(state: Pick<AppState, 'players' | 'games' | 'goals'
   const s: StatsMap = {};
   state.players.forEach(p => { s[p.name] = { def: 0, mid: 0, fwd: 0, total: 0, goals: 0 }; });
 
-  const g = state.games[state.curGame];
+  const g = getGame(state.games, state.curGame);
   if (!g) return s;
 
   g.rotations.forEach(rot => {
@@ -44,7 +44,7 @@ export function getGameStats(state: Pick<AppState, 'players' | 'games' | 'goals'
       });
     });
   });
-  state.players.forEach(p => { s[p.name].goals += getGoals(state.goals, p.name, state.curGame); });
+  state.players.forEach(p => { s[p.name].goals += getGoals(state.goals, p.name, g.id); });
   return s;
 }
 
@@ -52,7 +52,7 @@ export function getCumulativeStats(state: Pick<AppState, 'players' | 'games' | '
   const s: StatsMap = {};
   state.players.forEach(p => { s[p.name] = { def: 0, mid: 0, fwd: 0, total: 0, goals: 0 }; });
 
-  state.games.forEach((g, gIdx) => {
+  state.games.forEach(g => {
     g.rotations.forEach(rot => {
       ensureShape(rot);
       POSITIONS.forEach(pos => {
@@ -61,15 +61,15 @@ export function getCumulativeStats(state: Pick<AppState, 'players' | 'games' | '
         });
       });
     });
-    state.players.forEach(p => { s[p.name].goals += getGoals(state.goals, p.name, gIdx); });
+    state.players.forEach(p => { s[p.name].goals += getGoals(state.goals, p.name, g.id); });
   });
   return s;
 }
 
 export function getSeasonRecord(state: Pick<AppState, 'games' | 'goals' | 'players'>): { wins: number; losses: number; ties: number } {
   let wins = 0, losses = 0, ties = 0;
-  state.games.forEach((_, i) => {
-    const r = getGameResult(state, i);
+  state.games.forEach(g => {
+    const r = getGameResult(state, g.id);
     if (r === 'W') wins++;
     else if (r === 'L') losses++;
     else if (r === 'T') ties++;
@@ -79,7 +79,7 @@ export function getSeasonRecord(state: Pick<AppState, 'games' | 'goals' | 'playe
 
 export function getUnfilledCount(state: Pick<AppState, 'games' | 'curGame'>): number {
   let unfilled = 0;
-  const g = state.games[state.curGame];
+  const g = getGame(state.games, state.curGame);
   if (!g) return 0;
   g.rotations.forEach(rot => {
     if (rot.played) return;

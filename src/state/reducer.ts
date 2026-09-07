@@ -1,22 +1,35 @@
-import { POSITIONS } from '../constants';
+import { DEFAULT_FORMATION, POSITIONS } from '../constants';
 import { autoGenerate } from '../lib/autoGenerate';
-import { ensureShape, emptyRotations } from '../lib/utils';
+import { emptyRotations, getGame } from '../lib/utils';
+import { migrateLegacyState, type LegacyDoc } from './migrateLegacyState';
 import type {
-  AppState, Player, Position, Rotation, Goals,
-  DragSource, DropTarget, SwapSel, SlotMenuSel, StatsScope,
+  AppState, Position, Rotation, Goals, Game,
+  DragSource, DropTarget, SwapSel, SlotMenuSel, StatsScope, FormationSettings,
 } from '../types';
 
 // ── Initial State ────────────────────────────────────────────────────────────
 
+const initialGameId = crypto.randomUUID();
+
 export const initialState: AppState = {
   players: [],
   goals: {},
-  games: [{ name: 'Game 1', rotations: emptyRotations(), opponentScore: 0, completed: false }],
-  curGame: 0,
+  games: [{
+    id: initialGameId,
+    name: 'Game 1',
+    rotations: emptyRotations(DEFAULT_FORMATION),
+    opponentScore: 0,
+    completed: false,
+    excludedPlayers: [],
+    formation: DEFAULT_FORMATION,
+  }],
+  curGame: initialGameId,
+  settings: { defaultFormation: DEFAULT_FORMATION },
   statsScope: 'game',
   swapSel: null,
   slotMenuSel: null,
   isLoaded: false,
+  schemaVersion: 2,
 };
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -26,45 +39,45 @@ export type Action =
   | { type: 'REMOVE_PLAYER'; index: number }
   | { type: 'RENAME_PLAYER'; index: number; newName: string }
   | { type: 'TOGGLE_ACTIVE'; index: number }
-  | { type: 'SET_CUR_GAME'; index: number }
+  | { type: 'SET_CUR_GAME'; id: string }
   | { type: 'ADD_GAME'; name: string }
-  | { type: 'CLEAR_GAME'; gameIndex: number }
-  | { type: 'SET_PLAYED'; gameIndex: number; rotIndex: number; played: boolean }
-  | { type: 'TOGGLE_LOCK'; gameIndex: number; rotIndex: number; pos: Position; slotIndex: number }
+  | { type: 'CLEAR_GAME'; gameId: string }
+  | { type: 'SET_PLAYED'; gameId: string; rotIndex: number; played: boolean }
+  | { type: 'TOGGLE_LOCK'; gameId: string; rotIndex: number; pos: Position; slotIndex: number }
   | { type: 'DROP_PLAYER'; drag: DragSource; target: DropTarget }
   | { type: 'SET_SWAP_SEL'; swapSel: SwapSel | null }
   | { type: 'SET_SLOT_MENU'; slotMenuSel: SlotMenuSel | null }
-  | { type: 'SET_GOALS'; playerName: string; gameIndex: number; count: number }
-  | { type: 'SET_OPPONENT_SCORE'; gameIndex: number; score: number }
-  | { type: 'COMPLETE_GAME'; gameIndex: number }
-  | { type: 'SET_LINEUP'; gameIndex: number; rotations: Rotation[] }
+  | { type: 'SET_GOALS'; playerName: string; gameId: string; count: number }
+  | { type: 'SET_OPPONENT_SCORE'; gameId: string; score: number }
+  | { type: 'COMPLETE_GAME'; gameId: string }
+  | { type: 'SET_LINEUP'; gameId: string; rotations: Rotation[] }
   | { type: 'SET_STATS_SCOPE'; scope: StatsScope }
-  | { type: 'RENAME_GAME'; gameIndex: number; name: string }
-  | { type: 'DELETE_GAME'; gameIndex: number }
-  | { type: 'LOAD_FROM_FIREBASE'; data: Partial<{ players: unknown; goals: unknown; games: unknown; curGame: unknown }> };
+  | { type: 'RENAME_GAME'; gameId: string; name: string }
+  | { type: 'DELETE_GAME'; gameId: string }
+  | { type: 'LOAD_FROM_FIREBASE'; data: LegacyDoc };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function updateGame<T extends keyof AppState['games'][number]>(
+function updateGame<T extends keyof Game>(
   state: AppState,
-  gameIndex: number,
+  gameId: string,
   key: T,
-  value: AppState['games'][number][T],
+  value: Game[T],
 ): AppState {
-  const games = state.games.map((g, i) =>
-    i === gameIndex ? { ...g, [key]: value } : g
+  const games = state.games.map(g =>
+    g.id === gameId ? { ...g, [key]: value } : g
   );
   return { ...state, games };
 }
 
 function updateRotation(
   state: AppState,
-  gameIndex: number,
+  gameId: string,
   rotIndex: number,
   updater: (rot: Rotation) => Rotation,
 ): AppState {
-  const games = state.games.map((g, gi) => {
-    if (gi !== gameIndex) return g;
+  const games = state.games.map(g => {
+    if (g.id !== gameId) return g;
     const rotations = g.rotations.map((r, ri) => ri === rotIndex ? updater({ ...r }) : r);
     return { ...g, rotations };
   });
@@ -90,11 +103,11 @@ export function reducer(state: AppState, action: Action): AppState {
       delete goals[name];
       const games = state.games.map(g => ({
         ...g,
+        excludedPlayers: g.excludedPlayers.filter(p => p !== name),
         rotations: g.rotations.map(rot => {
-          ensureShape(rot);
           const updated: Rotation = { ...rot };
           POSITIONS.forEach(pos => {
-            updated[pos] = updated[pos].map(p => p === name ? null : p) as [string | null, string | null];
+            updated[pos] = updated[pos].map(p => p === name ? null : p);
           });
           updated.bench = updated.bench.filter(p => p !== name);
           return updated;
@@ -114,10 +127,11 @@ export function reducer(state: AppState, action: Action): AppState {
       if (goals[old]) { goals[n] = goals[old]; delete goals[old]; }
       const games = state.games.map(g => ({
         ...g,
+        excludedPlayers: g.excludedPlayers.map(p => p === old ? n : p),
         rotations: g.rotations.map(rot => {
           const updated: Rotation = { ...rot };
           POSITIONS.forEach(pos => {
-            updated[pos] = updated[pos].map(p => p === old ? n : p) as [string | null, string | null];
+            updated[pos] = updated[pos].map(p => p === old ? n : p);
           });
           updated.bench = updated.bench.map(p => p === old ? n : p);
           return updated;
@@ -134,29 +148,41 @@ export function reducer(state: AppState, action: Action): AppState {
     }
 
     case 'SET_CUR_GAME':
-      return { ...state, curGame: action.index, swapSel: null, slotMenuSel: null };
+      return { ...state, curGame: action.id, swapSel: null, slotMenuSel: null };
 
     case 'ADD_GAME': {
       const name = action.name.trim() || `Game ${state.games.length + 1}`;
-      const games = [...state.games, { name, rotations: emptyRotations(), opponentScore: 0, completed: false }];
-      return { ...state, games, curGame: games.length - 1, swapSel: null, slotMenuSel: null };
+      const id = crypto.randomUUID();
+      const formation: FormationSettings = state.settings.defaultFormation;
+      const newGame: Game = {
+        id, name,
+        rotations: emptyRotations(formation),
+        opponentScore: 0,
+        completed: false,
+        excludedPlayers: [],
+        formation,
+      };
+      return { ...state, games: [...state.games, newGame], curGame: id, swapSel: null, slotMenuSel: null };
     }
 
-    case 'CLEAR_GAME':
-      return updateGame(state, action.gameIndex, 'rotations', emptyRotations());
+    case 'CLEAR_GAME': {
+      const game = getGame(state.games, action.gameId);
+      if (!game) return state;
+      return updateGame(state, action.gameId, 'rotations', emptyRotations(game.formation));
+    }
 
     case 'SET_PLAYED':
-      return updateRotation(state, action.gameIndex, action.rotIndex, rot => ({
+      return updateRotation(state, action.gameId, action.rotIndex, rot => ({
         ...rot, played: action.played,
       }));
 
     case 'TOGGLE_LOCK':
-      return updateRotation(state, action.gameIndex, action.rotIndex, rot => {
+      return updateRotation(state, action.gameId, action.rotIndex, rot => {
         const locked = {
           ...rot.locked,
           [action.pos]: rot.locked[action.pos].map((v, i) =>
             i === action.slotIndex ? !v : v
-          ) as [boolean, boolean],
+          ),
         };
         return { ...rot, locked };
       });
@@ -165,17 +191,17 @@ export function reducer(state: AppState, action: Action): AppState {
       const { drag, target } = action;
       if (!drag.playerName) return state;
 
-      const games = state.games.map((g, gi) => {
-        if (gi !== state.curGame) return g;
+      const games = state.games.map(g => {
+        if (g.id !== state.curGame) return g;
         const rotations = g.rotations.map((rot, ri) => {
           // Only process involved rotations (same rIdx for drag and target in our app)
           if (ri !== drag.rIdx && ri !== target.rIdx) return rot;
 
           const r: Rotation = {
             ...rot,
-            def: [...rot.def] as [string | null, string | null],
-            mid: [...rot.mid] as [string | null, string | null],
-            fwd: [...rot.fwd] as [string | null, string | null],
+            def: [...rot.def],
+            mid: [...rot.mid],
+            fwd: [...rot.fwd],
             bench: [...rot.bench],
             locked: { ...rot.locked },
           };
@@ -230,106 +256,62 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'SET_GOALS': {
       const goals: Goals = { ...state.goals };
       if (!goals[action.playerName]) goals[action.playerName] = {};
-      goals[action.playerName] = { ...goals[action.playerName], [action.gameIndex]: Math.max(0, action.count) };
+      goals[action.playerName] = { ...goals[action.playerName], [action.gameId]: Math.max(0, action.count) };
       return { ...state, goals };
     }
 
     case 'SET_OPPONENT_SCORE': {
       const score = Math.max(0, action.score);
-      return updateGame(state, action.gameIndex, 'opponentScore', score);
+      return updateGame(state, action.gameId, 'opponentScore', score);
     }
 
     case 'COMPLETE_GAME': {
-      const games = state.games.map((g, i) =>
-        i === action.gameIndex ? { ...g, completed: !g.completed } : g
+      const games = state.games.map(g =>
+        g.id === action.gameId ? { ...g, completed: !g.completed } : g
       );
       return { ...state, games };
     }
 
     case 'SET_LINEUP':
-      return updateGame(state, action.gameIndex, 'rotations', action.rotations);
+      return updateGame(state, action.gameId, 'rotations', action.rotations);
 
     case 'SET_STATS_SCOPE':
       return { ...state, statsScope: action.scope };
 
     case 'RENAME_GAME': {
-      const games = state.games.map((g, i) =>
-        i === action.gameIndex ? { ...g, name: action.name.trim() || g.name } : g
+      const games = state.games.map(g =>
+        g.id === action.gameId ? { ...g, name: action.name.trim() || g.name } : g
       );
       return { ...state, games };
     }
 
     case 'DELETE_GAME': {
       if (state.games.length <= 1) return state;
-      const { gameIndex } = action;
-      const games = state.games.filter((_, i) => i !== gameIndex);
+      const { gameId } = action;
+      const deletedIdx = state.games.findIndex(g => g.id === gameId);
+      if (deletedIdx === -1) return state;
+      const games = state.games.filter(g => g.id !== gameId);
 
-      // Shift goal game-indices for games after the deleted one
+      // Goals are keyed by stable game id, so deleting a game only means
+      // dropping that one key — no reindexing of other games' goals needed.
       const goals: Goals = {};
       Object.entries(state.goals).forEach(([player, gameGoals]) => {
-        const shifted: Record<number, number> = {};
-        Object.entries(gameGoals).forEach(([gIdx, count]) => {
-          const idx = Number(gIdx);
-          if (idx < gameIndex) shifted[idx] = count;
-          else if (idx > gameIndex) shifted[idx - 1] = count;
-          // idx === gameIndex: dropped
-        });
-        goals[player] = shifted;
+        goals[player] = Object.fromEntries(
+          Object.entries(gameGoals).filter(([id]) => id !== gameId)
+        );
       });
 
       let curGame = state.curGame;
-      if (gameIndex === curGame) curGame = Math.max(0, gameIndex - 1);
-      else if (gameIndex < curGame) curGame -= 1;
+      if (curGame === gameId) {
+        curGame = games[Math.max(0, deletedIdx - 1)]?.id ?? games[0]?.id ?? '';
+      }
 
       return { ...state, games, goals, curGame, swapSel: null, slotMenuSel: null };
     }
 
     case 'LOAD_FROM_FIREBASE': {
-      const { data } = action;
-      let players: Player[] = state.players;
-      let goals: Goals = state.goals;
-      let games = state.games;
-      let curGame = state.curGame;
-
-      if (Array.isArray(data.players)) {
-        players = (data.players as unknown[]).map(p =>
-          typeof p === 'string'
-            ? { name: p, active: true }
-            : { name: (p as Player).name || String(p), active: (p as Player).active !== false }
-        );
-      }
-      if (data.goals && typeof data.goals === 'object') {
-        goals = data.goals as Goals;
-      }
-      if (Array.isArray(data.games)) {
-        games = (data.games as unknown[]).map(g => {
-          const game = g as AppState['games'][number];
-          return {
-            ...game,
-            opponentScore: game.opponentScore || 0,
-            completed: game.completed || false,
-            rotations: (game.rotations || []).map(r => {
-              ensureShape(r);
-              const sanitized: Rotation = { ...r };
-              POSITIONS.forEach(pos => {
-                sanitized[pos] = sanitized[pos].map(p => {
-                  if (!p) return null;
-                  return typeof p === 'string' ? p : ((p as { name?: string }).name || null);
-                }) as [string | null, string | null];
-              });
-              sanitized.bench = sanitized.bench
-                .map(p => typeof p === 'string' ? p : ((p as { name?: string }).name || null))
-                .filter(Boolean) as string[];
-              return sanitized;
-            }),
-          };
-        });
-      }
-      if (typeof data.curGame === 'number') {
-        curGame = data.curGame;
-      }
-
-      return { ...state, players, goals, games, curGame, isLoaded: true };
+      const migrated = migrateLegacyState(action.data, state);
+      return { ...state, ...migrated, isLoaded: true };
     }
 
     default:
@@ -340,5 +322,5 @@ export function reducer(state: AppState, action: Action): AppState {
 // Convenience: auto-generate action creator
 export function autoGenerateAction(state: AppState): Action {
   const rotations = autoGenerate(state);
-  return { type: 'SET_LINEUP', gameIndex: state.curGame, rotations };
+  return { type: 'SET_LINEUP', gameId: state.curGame, rotations };
 }

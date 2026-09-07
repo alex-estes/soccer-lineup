@@ -3,6 +3,7 @@ import { IconBallFootball } from '@tabler/icons-react';
 import type { User } from 'firebase/auth';
 import { HeaderMenu } from './HeaderMenu';
 import { useAppState } from '../../state/AppContext';
+import { getGame } from '../../lib/utils';
 import type { SyncStatus } from '../../types';
 
 interface Props {
@@ -15,7 +16,7 @@ export function Header({ syncStatus, user, onSignOut }: Props) {
   const { state, dispatch } = useAppState();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const game = state.games[state.curGame];
+  const game = getGame(state.games, state.curGame);
   const rots = game?.rotations ?? [];
   const playedCount = rots.filter(r => r.played).length;
   const rotLabel = playedCount === rots.length
@@ -33,7 +34,7 @@ export function Header({ syncStatus, user, onSignOut }: Props) {
 
   function handleClear() {
     if (!confirm('Clear all rotations in this game? Locks and played status will be reset.')) return;
-    dispatch({ type: 'CLEAR_GAME', gameIndex: state.curGame });
+    dispatch({ type: 'CLEAR_GAME', gameId: state.curGame });
   }
 
   return (

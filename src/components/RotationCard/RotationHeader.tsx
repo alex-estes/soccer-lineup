@@ -1,5 +1,6 @@
 import { IconCircleCheck, IconPlayerPlay, IconClock } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
+import { getGame } from '../../lib/utils';
 
 interface Props {
   rIdx: number;
@@ -9,7 +10,7 @@ interface Props {
 
 export function RotationHeader({ rIdx, played, isCurrentRotation }: Props) {
   const { state, dispatch } = useAppState();
-  const rots = state.games[state.curGame]?.rotations ?? [];
+  const rots = getGame(state.games, state.curGame)?.rotations ?? [];
 
   const prevPlayed = rIdx === 0 || rots[rIdx - 1]?.played;
   const nextPlayed = rIdx < rots.length - 1 && rots[rIdx + 1]?.played;
@@ -43,7 +44,7 @@ export function RotationHeader({ rIdx, played, isCurrentRotation }: Props) {
           disabled={toggleDisabled}
           onChange={e => dispatch({
             type: 'SET_PLAYED',
-            gameIndex: state.curGame,
+            gameId: state.curGame,
             rotIndex: rIdx,
             played: e.target.checked,
           })}

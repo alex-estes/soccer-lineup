@@ -6,29 +6,43 @@ export interface Player {
 }
 
 export interface LockedSlots {
-  def: [boolean, boolean];
-  mid: [boolean, boolean];
-  fwd: [boolean, boolean];
+  def: boolean[];
+  mid: boolean[];
+  fwd: boolean[];
 }
 
 export interface Rotation {
-  def: [string | null, string | null];
-  mid: [string | null, string | null];
-  fwd: [string | null, string | null];
+  def: (string | null)[];
+  mid: (string | null)[];
+  fwd: (string | null)[];
   bench: string[];
   played: boolean;
   locked: LockedSlots;
 }
 
+export interface FormationSettings {
+  playersOnField: number;
+  defenders: number;
+  midfielders: number;
+  forwards: number;
+}
+
+export interface AppSettings {
+  defaultFormation: FormationSettings;
+}
+
 export interface Game {
+  id: string;
   name: string;
   rotations: Rotation[];
   opponentScore: number;
   completed: boolean;
+  excludedPlayers: string[];
+  formation: FormationSettings;
 }
 
-// goals[playerName][gameIndex] = count
-export type Goals = Record<string, Record<number, number>>;
+// goals[playerName][gameId] = count
+export type Goals = Record<string, Record<string, number>>;
 
 export type StatsScope = 'game' | 'season';
 
@@ -74,9 +88,11 @@ export interface AppState {
   players: Player[];
   goals: Goals;
   games: Game[];
-  curGame: number;
+  curGame: string;
+  settings: AppSettings;
   statsScope: StatsScope;
   swapSel: SwapSel | null;
   slotMenuSel: SlotMenuSel | null;
   isLoaded: boolean;
+  schemaVersion: number;
 }
