@@ -1,4 +1,5 @@
 import { IconRotateClockwise2, IconBallFootball } from '@tabler/icons-react';
+import { statCell } from '../../lib/stats';
 import type { Player, StatsMap } from '../../types';
 import styles from './PlayerStatsTable.module.css';
 
@@ -9,10 +10,6 @@ interface Props {
   dimNames?: Set<string>;
   /** Skip the outer card chrome (bg/border/padding) — for nesting inside another card. */
   bare?: boolean;
-}
-
-function cell(n: number | undefined): string {
-  return n && n > 0 ? String(n) : '–';
 }
 
 export function PlayerStatsTable({ players, stats, dimNames, bare }: Props) {
@@ -42,11 +39,11 @@ export function PlayerStatsTable({ players, stats, dimNames, bare }: Props) {
         return (
           <div className={[styles.row, dim ? styles.dim : ''].filter(Boolean).join(' ')} key={name}>
             <span className={styles.player}>{name}</span>
-            <span className={[styles.val, styles.def].join(' ')}>{cell(s?.def)}</span>
-            <span className={[styles.val, styles.mid].join(' ')}>{cell(s?.mid)}</span>
-            <span className={[styles.val, styles.fwd].join(' ')}>{cell(s?.fwd)}</span>
-            <span className={[styles.val, styles.played].join(' ')}>{cell(s?.total)}</span>
-            <span className={[styles.val, styles.goals].join(' ')}>{cell(s?.goals)}</span>
+            <span className={[styles.val, styles.def].join(' ')}>{statCell(s?.def)}</span>
+            <span className={[styles.val, styles.mid].join(' ')}>{statCell(s?.mid)}</span>
+            <span className={[styles.val, styles.fwd].join(' ')}>{statCell(s?.fwd)}</span>
+            <span className={[styles.val, styles.played].join(' ')}>{statCell(s?.total)}</span>
+            <span className={[styles.val, styles.goals].join(' ')}>{statCell(s?.goals)}</span>
           </div>
         );
       })}

@@ -33,3 +33,16 @@
 .loss .label { color: var(--red-400); }
 .tie .value { color: var(--neutral-300); }
 .tie .label { color: var(--neutral-400); }
+
+/* Player page tones. DEF/MID/FWD follow the Figma's teal/amber/red, which is
+   deliberately not the blue the stats table uses for its D column. */
+.teal .value { color: var(--teal-400); }
+.teal .label { color: var(--teal-700); }
+.neutral .value { color: var(--neutral-300); }
+.neutral .label { color: var(--neutral-400); }
+.def .value { color: var(--teal-400); }
+.def .label { color: var(--neutral-300); }
+.mid .value { color: var(--color-warning); }
+.mid .label { color: var(--neutral-300); }
+.fwd .value { color: var(--color-danger); }
+.fwd .label { color: var(--neutral-300); }

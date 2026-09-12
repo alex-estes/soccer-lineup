@@ -1,5 +1,6 @@
 import { DEFAULT_FORMATION } from '../constants';
 import { ensureShape } from '../lib/utils';
+import { normalizeSkills } from '../lib/skills';
 import type { AppSettings, AppState, FormationSettings, Game, Goals, Player, Rotation } from '../types';
 
 export interface LegacyDoc {
@@ -61,13 +62,19 @@ function sanitizeRotation(raw: unknown): Rotation {
  * already-migrated document is a no-op.
  */
 export function migrateLegacyState(data: LegacyDoc, current: CurrentState): MigratedState {
+  // `skills` MUST be carried through here — this function rebuilds every Player from
+  // scratch on each Firestore load, so anything not listed is silently erased.
   const players: Player[] = Array.isArray(data.players)
     ? (data.players as unknown[]).map(p =>
         typeof p === 'string'
-          ? { name: p, active: true }
-          : { name: (p as Player).name || String(p), active: (p as Player).active !== false }
+          ? { name: p, active: true, skills: normalizeSkills(undefined) }
+          : {
+              name: (p as Player).name || String(p),
+              active: (p as Player).active !== false,
+              skills: normalizeSkills((p as { skills?: unknown }).skills),
+            }
       )
-    : current.players;
+    : current.players.map(p => ({ ...p, skills: normalizeSkills(p.skills) }));
 
   const indexToId = new Map<number, string>();
   let games: Game[] = current.games;
@@ -105,9 +112,18 @@ export function migrateLegacyState(data: LegacyDoc, current: CurrentState): Migr
     }
   }
 
-  const settings: AppSettings = isValidFormation((data.settings as { defaultFormation?: unknown } | undefined)?.defaultFormation)
-    ? { defaultFormation: (data.settings as { defaultFormation: FormationSettings }).defaultFormation }
-    : current.settings;
+  const storedSettings = data.settings as
+    { defaultFormation?: unknown; useSkillRatings?: unknown } | undefined;
+  const settings: AppSettings = {
+    defaultFormation: isValidFormation(storedSettings?.defaultFormation)
+      ? (storedSettings!.defaultFormation as FormationSettings)
+      : current.settings.defaultFormation,
+    // A doc written before this feature has no key at all — that means "on".
+    // Only an explicitly stored `false` turns it off.
+    useSkillRatings: storedSettings
+      ? storedSettings.useSkillRatings !== false
+      : current.settings.useSkillRatings,
+  };
 
   let curGame = current.curGame;
   if (Array.isArray(data.games)) {
@@ -119,5 +135,5 @@ export function migrateLegacyState(data: LegacyDoc, current: CurrentState): Migr
     }
   }
 
-  return { players, goals, games, settings, curGame, schemaVersion: 2 };
+  return { players, goals, games, settings, curGame, schemaVersion: 3 };
 }

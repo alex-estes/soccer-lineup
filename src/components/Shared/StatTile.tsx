@@ -1,9 +1,11 @@
 import styles from './StatTile.module.css';
 
+type Tone = 'win' | 'loss' | 'tie' | 'teal' | 'neutral' | 'def' | 'mid' | 'fwd';
+
 interface Props {
-  value: number;
+  value: number | string;
   label: string;
-  tone: 'win' | 'loss' | 'tie';
+  tone: Tone;
 }
 
 export function StatTile({ value, label, tone }: Props) {

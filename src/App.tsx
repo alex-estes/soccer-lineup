@@ -8,6 +8,7 @@ import { SignInPage } from './components/SignInPage';
 import { HomePage } from './pages/Home/HomePage';
 import { GameDayPage } from './pages/GameDay/GameDayPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
+import { PlayerPage } from './pages/Player/PlayerPage';
 import { AppContext } from './state/AppContext';
 import { reducer, initialState } from './state/reducer';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
@@ -70,6 +71,7 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
           <Route path="/" element={<HomePage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
           <Route path="/game/:gameId" element={<GameDayPage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
           <Route path="/settings" element={<SettingsPage user={user} onSignOut={onSignOut} />} />
+          <Route path="/player/:name" element={<PlayerPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>

@@ -2,7 +2,9 @@ import { useRef, useState } from 'react';
 import { IconLock, IconLockOpen, IconReplace } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { SlotDropdown } from './SlotDropdown';
+import { Chip } from '../Shared/Chip';
 import { getGame } from '../../lib/utils';
+import { levelOf, POSITION_SKILL, skillLetter } from '../../lib/skills';
 import type { Position, DragSource } from '../../types';
 import styles from './PlayerSlot.module.css';
 
@@ -104,7 +106,14 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed, drag
           >
             {locked ? <IconLock size={24} /> : <IconLockOpen size={24} />}
           </button>
-          <span className={styles.name}>{playerName}</span>
+          <div className={styles.nameGroup}>
+            <span className={styles.name}>{playerName}</span>
+            {state.settings.useSkillRatings && (
+              <Chip tone="neutral" size="sm">
+                {skillLetter(levelOf(state.players, playerName, POSITION_SKILL[pos]))}
+              </Chip>
+            )}
+          </div>
           {!isPlayed && !locked && (
             <div className={styles.menuWrap}>
               <button

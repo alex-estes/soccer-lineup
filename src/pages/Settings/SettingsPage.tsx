@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { User } from 'firebase/auth';
-import { IconBrandAppleArcade, IconSettings } from '@tabler/icons-react';
+import { IconBrandAppleArcade, IconMathSymbols, IconSettings } from '@tabler/icons-react';
 import { AppHeader } from '../../components/Shared/AppHeader';
 import { Stepper } from '../../components/Shared/Stepper';
 import { Button } from '../../components/Shared/Button';
+import { Toggle } from '../../components/Shared/Toggle';
 import { ConfirmDialog } from '../../components/Shared/ConfirmDialog';
 import { forceReload } from '../../lib/forceReload';
 import { useAppState } from '../../state/AppContext';
@@ -60,6 +61,23 @@ export function SettingsPage({ user, onSignOut }: Props) {
             <div className={styles.row}>
               <span className={styles.label}>Forwards</span>
               <Stepper value={formation.forwards} onChange={v => updateCount('forwards', v)} />
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.heading}>
+            <IconMathSymbols size={24} />
+            <span>ALGORITHM</span>
+          </div>
+          <div className={styles.list}>
+            <div className={styles.row}>
+              <span className={styles.label}>Distribute Players Based on Skill</span>
+              <Toggle
+                checked={state.settings.useSkillRatings}
+                onChange={enabled => dispatch({ type: 'SET_USE_SKILL_RATINGS', enabled })}
+                label="Distribute Players Based on Skill"
+              />
             </div>
           </div>
         </section>
