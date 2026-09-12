@@ -1,0 +1,32 @@
+.track {
+  position: relative;
+  flex-shrink: 0;
+  width: 70px;
+  height: var(--tap-min);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--neutral-600);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.track.on {
+  background: var(--teal-700);
+}
+
+.knob {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-lg);
+  background: var(--neutral-400);
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.track.on .knob {
+  background: var(--color-brand-primary);
+  transform: translateX(30px);
+}

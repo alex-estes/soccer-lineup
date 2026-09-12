@@ -90,4 +90,24 @@ export function getUnfilledCount(state: Pick<AppState, 'games' | 'curGame'>): nu
   return unfilled;
 }
 
+/** Shared "show – instead of 0" formatting for every stat readout. */
+export function statCell(n: number | undefined): string {
+  return n && n > 0 ? String(n) : '–';
+}
+
+/**
+ * Games in which this player appears in at least one rotation slot. Counts
+ * auto-generated future rotations, consistent with getCumulativeStats — which
+ * already counts unplayed rotations toward D/M/F — so the Player page's GAMES
+ * tile agrees with the DEF/MID/FWD tiles next to it.
+ */
+export function getGamesPlayed(state: Pick<AppState, 'games'>, name: string): number {
+  return state.games.filter(g =>
+    g.rotations.some(rot => {
+      ensureShape(rot);
+      return POSITIONS.some(pos => rot[pos].includes(name));
+    })
+  ).length;
+}
+
 export type { PlayerStats };
