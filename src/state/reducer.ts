@@ -1,10 +1,11 @@
 import { DEFAULT_FORMATION, POSITIONS } from '../constants';
 import { autoGenerate } from '../lib/autoGenerate';
 import { emptyRotations, getGame } from '../lib/utils';
+import { clampLevel, EMPTY_SKILLS, normalizeSkills } from '../lib/skills';
 import { migrateLegacyState, type LegacyDoc } from './migrateLegacyState';
 import type {
   AppState, Position, Rotation, Goals, Game,
-  DragSource, DropTarget, SwapSel, SlotMenuSel, StatsScope, FormationSettings,
+  DragSource, DropTarget, SwapSel, SlotMenuSel, StatsScope, FormationSettings, SkillKey,
 } from '../types';
 
 // ── Initial State ────────────────────────────────────────────────────────────
@@ -24,12 +25,12 @@ export const initialState: AppState = {
     formation: DEFAULT_FORMATION,
   }],
   curGame: initialGameId,
-  settings: { defaultFormation: DEFAULT_FORMATION },
+  settings: { defaultFormation: DEFAULT_FORMATION, useSkillRatings: true },
   statsScope: 'game',
   swapSel: null,
   slotMenuSel: null,
   isLoaded: false,
-  schemaVersion: 2,
+  schemaVersion: 3,
 };
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -39,6 +40,8 @@ export type Action =
   | { type: 'REMOVE_PLAYER'; index: number }
   | { type: 'RENAME_PLAYER'; index: number; newName: string }
   | { type: 'TOGGLE_ACTIVE'; index: number }
+  | { type: 'SET_PLAYER_SKILL'; name: string; skill: SkillKey; level: number }
+  | { type: 'SET_USE_SKILL_RATINGS'; enabled: boolean }
   | { type: 'SET_CUR_GAME'; id: string }
   | { type: 'ADD_GAME'; name: string }
   | { type: 'CLEAR_GAME'; gameId: string }
@@ -96,7 +99,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'ADD_PLAYER': {
       const name = action.name.trim();
       if (!name || state.players.some(p => p.name === name)) return state;
-      return { ...state, players: [...state.players, { name, active: true }] };
+      return { ...state, players: [...state.players, { name, active: true, skills: { ...EMPTY_SKILLS } }] };
     }
 
     case 'REMOVE_PLAYER': {
@@ -150,6 +153,20 @@ export function reducer(state: AppState, action: Action): AppState {
       );
       return { ...state, players };
     }
+
+    // Keyed by name, not index: the player page is routed by name and has no roster index.
+    case 'SET_PLAYER_SKILL': {
+      const level = clampLevel(action.level);
+      const players = state.players.map(p =>
+        p.name === action.name
+          ? { ...p, skills: { ...normalizeSkills(p.skills), [action.skill]: level } }
+          : p
+      );
+      return { ...state, players };
+    }
+
+    case 'SET_USE_SKILL_RATINGS':
+      return { ...state, settings: { ...state.settings, useSkillRatings: action.enabled } };
 
     case 'SET_CUR_GAME':
       return { ...state, curGame: action.id, swapSel: null, slotMenuSel: null };

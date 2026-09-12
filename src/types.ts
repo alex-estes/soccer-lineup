@@ -1,8 +1,14 @@
 export type Position = 'def' | 'mid' | 'fwd';
 
+/** 0 = unrated (shown as "–"), 1 = C, 2 = B, 3 = A. Numeric so the Stepper works as-is. */
+export type SkillLevel = 0 | 1 | 2 | 3;
+export type SkillKey = 'defense' | 'offense' | 'teamwork' | 'kindness';
+export type PlayerSkills = Record<SkillKey, SkillLevel>;
+
 export interface Player {
   name: string;
   active: boolean;
+  skills: PlayerSkills;
 }
 
 export interface LockedSlots {
@@ -29,6 +35,8 @@ export interface FormationSettings {
 
 export interface AppSettings {
   defaultFormation: FormationSettings;
+  /** When off, the lineup generator ignores skill ratings entirely (pre-ratings behaviour). */
+  useSkillRatings: boolean;
 }
 
 export interface Game {
