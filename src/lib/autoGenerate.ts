@@ -102,9 +102,12 @@ function findDonor(
       if (rot.locked[p2][i]) return;           // locked slot — immovable
       // Judged by the OVER-CAP line's skill: a donor who is also weak there solves nothing.
       if (skills.isLow(pos, n)) return;
-      // And the trade must not push the donor's own line over its cap.
+      // And the trade must not push the donor's own line further over its cap. A line
+      // that is ALREADY over cap — every forward weak on offense, say — may still take
+      // the swap as long as it comes out no worse, which is what lets an otherwise
+      // hopeless attack still donate a competent defender.
       const after = donorWeak - (skills.isLow(p2, n) ? 1 : 0) + (skills.isLow(p2, outName) ? 1 : 0);
-      if (after > donorCap) return;
+      if (after > Math.max(donorCap, donorWeak)) return;
       candidates.push({ pos: p2, sIdx: i, name: n });
     });
   });
@@ -284,6 +287,11 @@ export function autoGenerate(
         });
 
         let idx = 0;
+        // A cheap first pass: avoid creating a violation rather than repairing one, which
+        // keeps the repair pass from having to shuffle slots around afterwards. It is NOT
+        // the guarantee — repairWeakLines below is — and mutation testing confirms the
+        // repair alone satisfies every case the test suite covers. Keep both: this one
+        // costs nothing and leaves positional balance less disturbed.
         if (lowPlaced >= cap) {
           // `remaining` is already sorted by positional count, so the first non-weak
           // candidate is also the one most owed this position — the cap costs as little
