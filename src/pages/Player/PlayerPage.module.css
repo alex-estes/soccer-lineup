@@ -1,0 +1,91 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-36);
+  align-items: flex-start;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-16) 24px;
+  box-sizing: border-box;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--neutral-300);
+}
+
+.sectionTitle span {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+}
+
+.statsRow {
+  display: flex;
+  gap: var(--space-8);
+  width: 100%;
+}
+
+/* The skills group is one card holding both headings and all four rows. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+  padding: var(--space-12);
+  background: var(--color-bg-surface);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+}
+
+.groupLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--neutral-300);
+}
+
+.groupLabel span {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--tracking-wide);
+}
+
+.skillRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+}
+
+.skillLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+}

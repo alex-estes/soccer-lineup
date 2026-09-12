@@ -31,8 +31,17 @@
   width: 100%;
 }
 
-.name {
+/* Keeps the rating chip tucked against the name instead of floating right. */
+.nameGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
   flex: 1 0 0;
+  min-width: 0;
+}
+
+.name {
+  flex: 0 1 auto;
   min-width: 0;
   font-family: var(--font-sans);
   font-weight: 700;

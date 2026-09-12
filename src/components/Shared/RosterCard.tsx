@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { IconUser, IconDots, IconPencil, IconTrash, IconUserOff, IconUserCheck } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
+import { IconUser, IconDots, IconPencil, IconTrash, IconUserOff, IconUserCheck, IconChevronRight } from '@tabler/icons-react';
 import { IconButton } from './IconButton';
 import { DropdownMenu } from './DropdownMenu';
 import type { Player } from '../../types';
@@ -36,6 +37,13 @@ export function RosterCard({ player, onRename, onDelete, onToggleActive }: Props
           />
         )}
       </div>
+      <Link
+        to={`/player/${encodeURIComponent(player.name)}`}
+        className={styles.chevronLink}
+        aria-label={`View ${player.name}`}
+      >
+        <IconChevronRight size={24} className={styles.chevron} />
+      </Link>
     </div>
   );
 }

@@ -39,3 +39,17 @@
 .menuWrap {
   position: relative;
 }
+
+.chevronLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  flex-shrink: 0;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-brand-primary);
+}
