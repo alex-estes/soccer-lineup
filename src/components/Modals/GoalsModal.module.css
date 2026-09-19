@@ -1,13 +1,16 @@
 .card {
   max-height: 85vh;
-  overflow-y: auto;
 }
 
+/* Only the player list scrolls; header, opponent score and footer stay put. */
 .list {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
   width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .row {
@@ -33,6 +36,7 @@
   width: 100%;
   padding-top: var(--space-8);
   border-top: 2px solid var(--color-border-default);
+  flex-shrink: 0;
 }
 
 .opponentLabel {
