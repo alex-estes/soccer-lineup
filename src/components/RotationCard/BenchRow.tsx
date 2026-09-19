@@ -1,22 +1,18 @@
-import { useState } from 'react';
 import { IconArmchair } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { availablePlayersForGame, getGame } from '../../lib/utils';
 import { POSITIONS } from '../../constants';
-import type { DragSource } from '../../types';
 import styles from './BenchRow.module.css';
 
 interface Props {
   rIdx: number;
   isPlayed: boolean;
-  dragRef: React.MutableRefObject<DragSource | null>;
 }
 
-export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
+export function BenchRow({ rIdx, isPlayed }: Props) {
   const { state, dispatch } = useAppState();
   const game = getGame(state.games, state.curGame);
   const rot = game?.rotations[rIdx];
-  const [dragTargetName, setDragTargetName] = useState<string | null>(null);
 
   if (!rot || !game) return null;
 
@@ -28,6 +24,8 @@ export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
   const displayedSlots = [...benchNames, ...available];
 
   const swapSel = state.swapSel;
+  // A field player is selected in this rotation, so tapping a bench player swaps them.
+  const fieldSel = swapSel && swapSel.type === 'slot' && swapSel.rIdx === rIdx && !isPlayed ? swapSel : null;
 
   return (
     <div className={styles.wrap}>
@@ -38,12 +36,13 @@ export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
       <div className={styles.chips}>
         {displayedSlots.map(p => {
           const isFilled = benchNames.includes(p);
-          const isSelected = !!(swapSel && swapSel.rIdx === rIdx && swapSel.playerName === p);
+          const isSelected = !!(swapSel && swapSel.type === 'bench' && swapSel.rIdx === rIdx && swapSel.playerName === p);
+          const isSwapTarget = isFilled && !!fieldSel;
           const className = [
             styles.chip,
             isFilled && !isPlayed ? styles.selectable : '',
             isSelected ? styles.selected : '',
-            dragTargetName === p ? styles.dragTarget : '',
+            isSwapTarget ? styles.swapTarget : '',
           ].filter(Boolean).join(' ');
 
           return (
@@ -51,26 +50,17 @@ export function BenchRow({ rIdx, isPlayed, dragRef }: Props) {
               key={p}
               data-bench-slot
               className={className}
-              draggable={isFilled && !isPlayed}
-              onDragStart={isFilled && !isPlayed ? e => {
-                dragRef.current = { type: 'bench', rIdx, playerName: p };
-                e.dataTransfer.effectAllowed = 'move';
-              } : undefined}
               onClick={isFilled && !isPlayed ? () => {
-                if (swapSel && swapSel.rIdx === rIdx && swapSel.playerName === p) {
+                if (fieldSel) {
+                  dispatch({
+                    type: 'MOVE_PLAYER',
+                    drag: { type: 'bench', rIdx, playerName: p },
+                    target: { type: 'slot', rIdx, pos: fieldSel.pos, sIdx: fieldSel.sIdx },
+                  });
                   dispatch({ type: 'SET_SWAP_SEL', swapSel: null });
                 } else {
-                  dispatch({ type: 'SET_SWAP_SEL', swapSel: { rIdx, playerName: p } });
+                  dispatch({ type: 'SET_SWAP_SEL', swapSel: isSelected ? null : { type: 'bench', rIdx, playerName: p } });
                 }
-              } : undefined}
-              onDragOver={!isPlayed ? e => { e.preventDefault(); setDragTargetName(p); } : undefined}
-              onDragLeave={!isPlayed ? () => setDragTargetName(null) : undefined}
-              onDrop={!isPlayed ? e => {
-                e.preventDefault();
-                setDragTargetName(null);
-                if (!dragRef.current) return;
-                dispatch({ type: 'DROP_PLAYER', drag: dragRef.current, target: { type: 'bench', rIdx } });
-                dragRef.current = null;
               } : undefined}
             >
               {p}

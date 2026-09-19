@@ -52,7 +52,6 @@
   color: var(--color-brand-primary);
 }
 
-.chip.dragTarget {
+.chip.swapTarget {
   border-color: var(--color-brand-primary);
-  background: var(--teal-900);
 }

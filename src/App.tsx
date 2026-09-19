@@ -25,42 +25,28 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
   const [state, dispatch] = useReducer(reducer, initialState);
   const syncStatus = useFirebaseSync(state, dispatch, lineupDoc);
 
-  // Close swap/slot-menu selection on Escape
+  // Clear the move selection on Escape
   useEffect(() => {
+    if (!state.swapSel) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Escape') return;
-      if (state.swapSel) { dispatch({ type: 'SET_SWAP_SEL', swapSel: null }); return; }
-      if (state.slotMenuSel) { dispatch({ type: 'SET_SLOT_MENU', slotMenuSel: null }); }
+      if (e.key === 'Escape') dispatch({ type: 'SET_SWAP_SEL', swapSel: null });
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [state.swapSel, state.slotMenuSel]);
+  }, [state.swapSel]);
 
-  // Dismiss swapSel when clicking outside bench/swap-target
+  // Dismiss swapSel when clicking outside bench/swap-target/swap button
   useEffect(() => {
     if (!state.swapSel) return;
     function handleClick(e: MouseEvent) {
       const t = e.target as Element;
-      if (!t.closest('[data-bench-slot]') && !t.closest('[data-swap-target]')) {
+      if (!t.closest('[data-bench-slot]') && !t.closest('[data-swap-target]') && !t.closest('[data-swap-btn]')) {
         dispatch({ type: 'SET_SWAP_SEL', swapSel: null });
       }
     }
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
   }, [state.swapSel]);
-
-  // Dismiss slotMenuSel when clicking outside
-  useEffect(() => {
-    if (!state.slotMenuSel) return;
-    function handleClick(e: MouseEvent) {
-      const t = e.target as Element;
-      if (!t.closest('[data-swap-btn]') && !t.closest('[data-slot-dropdown]')) {
-        dispatch({ type: 'SET_SLOT_MENU', slotMenuSel: null });
-      }
-    }
-    document.addEventListener('click', handleClick, true);
-    return () => document.removeEventListener('click', handleClick, true);
-  }, [state.slotMenuSel]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

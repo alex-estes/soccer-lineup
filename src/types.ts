@@ -66,18 +66,8 @@ export type StatsMap = Record<string, PlayerStats>;
 
 export type SyncStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export interface SwapSel {
-  rIdx: number;
-  playerName: string;
-}
-
-export interface SlotMenuSel {
-  rIdx: number;
-  pos: Position;
-  sIdx: number;
-}
-
-export interface DragSource {
+// A player picked up to move: a bench player, or a field player (pos + sIdx set).
+export interface MoveSource {
   type: 'slot' | 'bench';
   rIdx: number;
   playerName: string;
@@ -85,7 +75,7 @@ export interface DragSource {
   sIdx?: number;
 }
 
-export interface DropTarget {
+export interface MoveTarget {
   type: 'slot' | 'bench';
   rIdx: number;
   pos?: Position;
@@ -99,8 +89,7 @@ export interface AppState {
   curGame: string;
   settings: AppSettings;
   statsScope: StatsScope;
-  swapSel: SwapSel | null;
-  slotMenuSel: SlotMenuSel | null;
+  swapSel: MoveSource | null;
   isLoaded: boolean;
   schemaVersion: number;
 }

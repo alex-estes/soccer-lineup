@@ -4,7 +4,7 @@ import { useAppState } from '../../state/AppContext';
 import { isLineOverCap } from '../../lib/skills';
 import { Chip } from '../Shared/Chip';
 import { PlayerSlot } from './PlayerSlot';
-import type { Position, Rotation, DragSource } from '../../types';
+import type { Position, Rotation } from '../../types';
 import styles from './PositionGroup.module.css';
 
 interface Props {
@@ -12,10 +12,9 @@ interface Props {
   rIdx: number;
   rot: Rotation;
   isPlayed: boolean;
-  dragRef: React.MutableRefObject<DragSource | null>;
 }
 
-export function PositionGroup({ pos, rIdx, rot, isPlayed, dragRef }: Props) {
+export function PositionGroup({ pos, rIdx, rot, isPlayed }: Props) {
   const { state } = useAppState();
   // Derived at render, so a lineup edited by hand gets flagged too — not just
   // one the generator produced.
@@ -43,7 +42,6 @@ export function PositionGroup({ pos, rIdx, rot, isPlayed, dragRef }: Props) {
             playerName={rot[pos][sIdx]}
             locked={rot.locked[pos][sIdx]}
             isPlayed={isPlayed}
-            dragRef={dragRef}
           />
         ))}
       </div>

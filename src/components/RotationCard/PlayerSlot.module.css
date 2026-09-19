@@ -19,7 +19,7 @@
   cursor: pointer;
 }
 
-.slot.dragTarget {
+.slot.selected {
   border-color: var(--color-brand-primary);
   background: var(--teal-900);
 }
@@ -85,8 +85,4 @@
 .iconBtn.active {
   color: var(--color-brand-primary);
   background: var(--color-bg-base);
-}
-
-.menuWrap {
-  position: relative;
 }

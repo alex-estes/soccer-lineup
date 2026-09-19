@@ -5,7 +5,7 @@ import { clampLevel, EMPTY_SKILLS, normalizeSkills } from '../lib/skills';
 import { migrateLegacyState, type LegacyDoc } from './migrateLegacyState';
 import type {
   AppState, Position, Rotation, Goals, Game,
-  DragSource, DropTarget, SwapSel, SlotMenuSel, StatsScope, FormationSettings, SkillKey,
+  MoveSource, MoveTarget, StatsScope, FormationSettings, SkillKey,
 } from '../types';
 
 // ── Initial State ────────────────────────────────────────────────────────────
@@ -28,7 +28,6 @@ export const initialState: AppState = {
   settings: { defaultFormation: DEFAULT_FORMATION, useSkillRatings: true },
   statsScope: 'game',
   swapSel: null,
-  slotMenuSel: null,
   isLoaded: false,
   schemaVersion: 3,
 };
@@ -47,9 +46,8 @@ export type Action =
   | { type: 'CLEAR_GAME'; gameId: string }
   | { type: 'SET_PLAYED'; gameId: string; rotIndex: number; played: boolean }
   | { type: 'TOGGLE_LOCK'; gameId: string; rotIndex: number; pos: Position; slotIndex: number }
-  | { type: 'DROP_PLAYER'; drag: DragSource; target: DropTarget }
-  | { type: 'SET_SWAP_SEL'; swapSel: SwapSel | null }
-  | { type: 'SET_SLOT_MENU'; slotMenuSel: SlotMenuSel | null }
+  | { type: 'MOVE_PLAYER'; drag: MoveSource; target: MoveTarget }
+  | { type: 'SET_SWAP_SEL'; swapSel: MoveSource | null }
   | { type: 'SET_GOALS'; playerName: string; gameId: string; count: number }
   | { type: 'SET_OPPONENT_SCORE'; gameId: string; score: number }
   | { type: 'COMPLETE_GAME'; gameId: string }
@@ -169,7 +167,7 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, settings: { ...state.settings, useSkillRatings: action.enabled } };
 
     case 'SET_CUR_GAME':
-      return { ...state, curGame: action.id, swapSel: null, slotMenuSel: null };
+      return { ...state, curGame: action.id, swapSel: null };
 
     case 'ADD_GAME': {
       const name = action.name.trim() || `Game ${state.games.length + 1}`;
@@ -183,7 +181,7 @@ export function reducer(state: AppState, action: Action): AppState {
         excludedPlayers: [],
         formation,
       };
-      return { ...state, games: [...state.games, newGame], curGame: id, swapSel: null, slotMenuSel: null };
+      return { ...state, games: [...state.games, newGame], curGame: id, swapSel: null };
     }
 
     case 'CLEAR_GAME': {
@@ -208,7 +206,7 @@ export function reducer(state: AppState, action: Action): AppState {
         return { ...rot, locked };
       });
 
-    case 'DROP_PLAYER': {
+    case 'MOVE_PLAYER': {
       const { drag, target } = action;
       if (!drag.playerName) return state;
 
@@ -271,9 +269,6 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'SET_SWAP_SEL':
       return { ...state, swapSel: action.swapSel };
 
-    case 'SET_SLOT_MENU':
-      return { ...state, slotMenuSel: action.slotMenuSel };
-
     case 'SET_GOALS': {
       const goals: Goals = { ...state.goals };
       if (!goals[action.playerName]) goals[action.playerName] = {};
@@ -327,7 +322,7 @@ export function reducer(state: AppState, action: Action): AppState {
         curGame = games[Math.max(0, deletedIdx - 1)]?.id ?? games[0]?.id ?? '';
       }
 
-      return { ...state, games, goals, curGame, swapSel: null, slotMenuSel: null };
+      return { ...state, games, goals, curGame, swapSel: null };
     }
 
     case 'TOGGLE_GAME_PLAYER_EXCLUDED': {
