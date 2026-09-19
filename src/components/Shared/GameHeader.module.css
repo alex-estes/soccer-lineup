@@ -4,7 +4,7 @@
   justify-content: space-between;
   gap: var(--space-8);
   width: 100%;
-  padding: var(--space-8) var(--space-12);
+  padding: var(--space-12) var(--space-16);
   background: var(--color-bg-base);
   border-bottom: 2px solid var(--color-border-default);
   position: sticky;
@@ -12,6 +12,9 @@
   z-index: 40;
   box-sizing: border-box;
 }
+
+.win { background: var(--teal-900); }
+.loss { background: var(--red-900); }
 
 .iconButton {
   display: flex;
@@ -40,7 +43,7 @@
 .name {
   font-family: var(--font-sans);
   font-weight: 800;
-  font-size: var(--font-size-base);
+  font-size: 20px;
   letter-spacing: var(--tracking-wide);
   color: var(--color-text-primary);
   overflow: hidden;
@@ -50,12 +53,9 @@
 }
 
 .status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-base);
   letter-spacing: var(--tracking-wide);
   color: var(--color-text-secondary);
   white-space: nowrap;

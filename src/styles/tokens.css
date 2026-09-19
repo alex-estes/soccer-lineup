@@ -24,6 +24,7 @@
   --red-300: #eb8e96;
   --red-400: #e76a74;
   --red-500: #e34552;
+  --red-900: #501015; /* losing/lost game header bg */
   --red-loss-bg: #583134; /* the "loss" chip's bg has no bound variable in Figma, only a raw hex */
   --neutral-300: #98a3ae;
   --neutral-400: #70808f;

@@ -19,6 +19,20 @@ export function getTeamScore(state: Pick<AppState, 'games' | 'goals' | 'players'
   return total;
 }
 
+export interface LiveResult {
+  result: 'W' | 'L' | 'T';
+  teamScore: number;
+  opponentScore: number;
+}
+
+/** Current result of a game whether or not it's been marked completed. */
+export function getLiveResult(state: Pick<AppState, 'games' | 'goals' | 'players'>, gameId: string): LiveResult {
+  const teamScore = getTeamScore(state, gameId);
+  const opponentScore = getGame(state.games, gameId)?.opponentScore || 0;
+  const result = teamScore > opponentScore ? 'W' : teamScore < opponentScore ? 'L' : 'T';
+  return { result, teamScore, opponentScore };
+}
+
 export function getGameResult(state: Pick<AppState, 'games' | 'goals' | 'players'>, gameId: string): 'W' | 'L' | 'T' | null {
   const g = getGame(state.games, gameId);
   if (!g || !g.completed) return null;

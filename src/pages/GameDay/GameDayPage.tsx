@@ -10,6 +10,7 @@ import { TeamRosterChecklist } from './TeamRosterChecklist';
 import { GameDayStats } from './GameDayStats';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
+import { getLiveResult } from '../../lib/stats';
 import type { SyncStatus } from '../../types';
 import styles from './GameDayPage.module.css';
 
@@ -48,14 +49,12 @@ export function GameDayPage(_props: Props) {
 
   if (!game) return null;
 
-  const playedCount = game.rotations.filter(r => r.played).length;
-
   return (
     <>
       <GameHeader
         gameName={game.name}
-        playedCount={playedCount}
-        totalRotations={game.rotations.length}
+        completed={game.completed}
+        {...getLiveResult(state, game.id)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
       <main className={styles.content}>

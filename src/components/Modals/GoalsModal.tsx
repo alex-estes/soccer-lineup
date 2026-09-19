@@ -1,6 +1,6 @@
 import { IconBallFootball, IconShield, IconTrophy, IconX } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
-import { getTeamScore } from '../../lib/stats';
+import { getLiveResult } from '../../lib/stats';
 import { getGame } from '../../lib/utils';
 import { Stepper } from '../Shared/Stepper';
 import { Button } from '../Shared/Button';
@@ -20,9 +20,7 @@ export function GoalsModal({ open, onClose }: Props) {
   if (!game || !open) return null;
 
   const gameId = game.id;
-  const teamScore = getTeamScore(state, gameId);
-  const opponentScore = game.opponentScore || 0;
-  const result = teamScore > opponentScore ? 'W' : teamScore < opponentScore ? 'L' : 'T';
+  const { result, teamScore, opponentScore } = getLiveResult(state, gameId);
   const resultTone = result === 'W' ? 'win' : result === 'L' ? 'loss' : 'tie';
   const resultLabel = result === 'W' ? 'WINNING' : result === 'L' ? 'LOSING' : 'TIED';
 
