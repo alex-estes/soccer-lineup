@@ -39,6 +39,8 @@ export interface TeamSettings {
   rotationCount: number;
   /** When off, the lineup generator ignores skill ratings entirely (pre-ratings behaviour). */
   useSkillRatings: boolean;
+  /** Strongest available group plays the final rotation (needs useSkillRatings). */
+  strongFinish: boolean;
 }
 
 export interface Game {

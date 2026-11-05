@@ -53,6 +53,7 @@ export type Action =
   | { type: 'TOGGLE_ACTIVE'; index: number }
   | { type: 'SET_PLAYER_SKILL'; name: string; skill: SkillKey; level: number }
   | { type: 'SET_USE_SKILL_RATINGS'; enabled: boolean }
+  | { type: 'SET_STRONG_FINISH'; enabled: boolean }
   | { type: 'SET_CUR_GAME'; id: string }
   | { type: 'ADD_GAME'; name: string }
   | { type: 'CLEAR_GAME'; gameId: string }
@@ -200,6 +201,9 @@ export function reducer(state: AppState, action: Action): AppState {
 
     case 'SET_USE_SKILL_RATINGS':
       return updateSettings(state, { useSkillRatings: action.enabled });
+
+    case 'SET_STRONG_FINISH':
+      return updateSettings(state, { strongFinish: action.enabled });
 
     case 'SET_CUR_GAME':
       return { ...state, curGame: action.id, swapSel: null };
