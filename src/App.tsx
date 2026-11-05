@@ -1,6 +1,5 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useState, useCallback } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import type { DocumentReference } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -9,21 +8,38 @@ import { HomePage } from './pages/Home/HomePage';
 import { GameDayPage } from './pages/GameDay/GameDayPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { PlayerPage } from './pages/Player/PlayerPage';
+import { TeamsPage } from './pages/Teams/TeamsPage';
 import { AppContext } from './state/AppContext';
-import { reducer, initialState } from './state/reducer';
-import { useFirebaseSync } from './hooks/useFirebaseSync';
+import { reducer, makeInitialState } from './state/reducer';
+import type { TeamSnapshot } from './state/teamDoc';
+import { useTeamSync } from './hooks/useTeamSync';
+import { useTeams } from './hooks/useTeams';
 import { useAuth } from './hooks/useAuth';
-import { getUserLineupDoc } from './lib/firebaseConfig';
 
-interface AuthenticatedAppProps {
-  lineupDoc: DocumentReference;
+const LAST_TEAM_KEY = 'lastTeamId';
+
+function readLastTeam(): string | null {
+  try { return localStorage.getItem(LAST_TEAM_KEY); } catch { return null; }
+}
+
+function writeLastTeam(id: string) {
+  try { localStorage.setItem(LAST_TEAM_KEY, id); } catch { /* private mode — just don't remember */ }
+}
+
+interface TeamAppProps {
+  snapshot: TeamSnapshot;
   user: User;
   onSignOut: () => void;
 }
 
-function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps) {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const syncStatus = useFirebaseSync(state, dispatch, lineupDoc);
+/** Everything for the one open team. Remounted (via `key`) when the coach switches team. */
+function TeamApp({ snapshot, user, onSignOut }: TeamAppProps) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    snapshot,
+    s => makeInitialState(s.meta, s.players, s.settings),
+  );
+  const syncStatus = useTeamSync(state, dispatch, snapshot);
 
   // Clear the move selection on Escape
   useEffect(() => {
@@ -49,19 +65,58 @@ function AuthenticatedApp({ lineupDoc, user, onSignOut }: AuthenticatedAppProps)
   }, [state.swapSel]);
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
-      <UpdateBanner />
+    <AppContext.Provider value={{ state, dispatch, user }}>
       {!state.isLoaded && <LoadingOverlay />}
-      <HashRouter>
-        <Routes>
-          <Route path="/" element={<HomePage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
-          <Route path="/game/:gameId" element={<GameDayPage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
-          <Route path="/settings" element={<SettingsPage user={user} onSignOut={onSignOut} />} />
-          <Route path="/player/:name" element={<PlayerPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </HashRouter>
+      <Routes>
+        <Route path="/" element={<HomePage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
+        <Route path="/game/:gameId" element={<GameDayPage syncStatus={syncStatus} user={user} onSignOut={onSignOut} />} />
+        <Route path="/settings" element={<SettingsPage user={user} onSignOut={onSignOut} />} />
+        <Route path="/player/:name" element={<PlayerPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </AppContext.Provider>
+  );
+}
+
+function SignedInApp({ user, onSignOut }: { user: User; onSignOut: () => void }) {
+  const { teams, loading, error } = useTeams(user);
+  const [selectedId, setSelectedId] = useState<string | null>(readLastTeam);
+
+  const selectTeam = useCallback((id: string) => {
+    writeLastTeam(id);
+    setSelectedId(id);
+  }, []);
+
+  if (loading) return <LoadingOverlay />;
+
+  // The remembered team, or else the first one — a team that was deleted, or that this
+  // coach was removed from, simply drops out of `teams`.
+  const active = teams.find(t => t.meta.id === selectedId) ?? teams[0];
+
+  return (
+    <HashRouter>
+      <Routes>
+        <Route
+          path="/teams"
+          element={
+            <TeamsPage
+              user={user}
+              onSignOut={onSignOut}
+              teams={teams}
+              activeId={active?.meta.id ?? null}
+              loadError={error}
+              onSelect={selectTeam}
+            />
+          }
+        />
+        <Route
+          path="*"
+          element={active
+            ? <TeamApp key={active.meta.id} snapshot={active} user={user} onSignOut={onSignOut} />
+            : <Navigate to="/teams" replace />}
+        />
+      </Routes>
+    </HashRouter>
   );
 }
 
@@ -71,8 +126,12 @@ export function App() {
   if (loading) return <LoadingOverlay />;
   if (!user) return <SignInPage onSignIn={signIn} redirectError={error} />;
 
-  const lineupDoc = getUserLineupDoc(user.uid);
-  return <AuthenticatedApp lineupDoc={lineupDoc} user={user} onSignOut={signOut} />;
+  return (
+    <>
+      <UpdateBanner />
+      <SignedInApp key={user.uid} user={user} onSignOut={signOut} />
+    </>
+  );
 }
 
 export default App;

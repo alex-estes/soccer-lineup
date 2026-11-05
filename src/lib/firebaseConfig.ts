@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import { connectAuthEmulator, getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
@@ -15,6 +15,10 @@ const fbApp = initializeApp(firebaseConfig);
 export const db = getFirestore(fbApp);
 export const auth = getAuth(fbApp);
 
-export function getUserLineupDoc(uid: string) {
-  return doc(db, 'users', uid, 'lineups', 'main');
+// `VITE_USE_EMULATORS=true npm run dev` runs against local emulators
+// (`npx firebase-tools emulators:start --only auth,firestore --project soccer-lineup-f253e`)
+// so changes to sync or the security rules can be tried without touching real data.
+if (import.meta.env.DEV && import.meta.env.VITE_USE_EMULATORS === 'true') {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
 }

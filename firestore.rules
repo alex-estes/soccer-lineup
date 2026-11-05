@@ -1,0 +1,94 @@
+rules_version = '2';
+
+// Deploy with:  npx firebase-tools deploy --only firestore:rules --project soccer-lineup-f253e
+// (or paste into Firebase console → Firestore → Rules). Tested by `npm run test:rules`.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function teamPath(teamId) { return /databases/$(database)/documents/teams/$(teamId); }
+
+    // ── Pre-teams data (schema v1–v3): each coach's own single lineup document. ──
+    // Still readable so the app can migrate it into a team, and writable so it can be
+    // stamped `migratedToTeam`.
+    match /users/{userId}/{document=**} {
+      allow read, write: if signedIn() && me() == userId;
+    }
+
+    // ── Teams ──
+    match /teams/{teamId} {
+      function isMember() { return me() in resource.data.memberUids; }
+      function isOwner() { return resource.data.ownerUid == me(); }
+      function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+      function oldMembers() { return resource.data.memberUids.toSet(); }
+      function newMembers() { return request.resource.data.memberUids.toSet(); }
+
+      // Members only. The app's "my teams" query filters on memberUids, which this allows.
+      allow read: if signedIn() && isMember();
+
+      // You can only create a team you own and are the sole member of.
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == me()
+        && request.resource.data.memberUids == [me()]
+        && request.resource.data.joinCode is string
+        && request.resource.data.sport in ['soccer', 'basketball'];
+
+      allow update: if signedIn() && (
+        // Owner: anything except the owner and sport, and can't drop themselves.
+        (isOwner()
+          && !changed().hasAny(['ownerUid', 'sport'])
+          && me() in request.resource.data.memberUids)
+
+        // Coach: edit the roster, settings and name; can't touch the code or anyone
+        // else's membership — but may remove themselves (leave).
+        || (isMember() && !isOwner()
+          && !changed().hasAny(['ownerUid', 'sport', 'joinCode'])
+          && (!changed().hasAny(['memberUids'])
+              || newMembers() == oldMembers().difference([me()].toSet())))
+
+        // Joining: someone not on the team may add exactly themselves (and their
+        // display name), and only by presenting the team's current code.
+        || (!isMember()
+          && changed().hasOnly(['memberUids', 'memberNames', 'lastJoinCode'])
+          && newMembers() == oldMembers().union([me()].toSet())
+          && request.resource.data.lastJoinCode == resource.data.joinCode)
+      );
+
+      allow delete: if signedIn() && isOwner();
+
+      // ── Games: one document each, open to every coach on the team. ──
+      match /games/{gameId} {
+        // `get` sees the team as it was before this request — right for reads, and for
+        // deletes made in the same batch that deletes the team.
+        allow read, delete: if signedIn()
+          && exists(teamPath(teamId))
+          && me() in get(teamPath(teamId)).data.memberUids;
+        // `getAfter` sees the team as of the end of this request — needed when a team and
+        // its games are created in one batch (a migration).
+        allow create, update: if signedIn()
+          && existsAfter(teamPath(teamId))
+          && me() in getAfter(teamPath(teamId)).data.memberUids;
+      }
+    }
+
+    // ── Join codes: code → teamId. ──
+    // Readable one at a time by anyone signed in (that's how a code is redeemed), never
+    // listable, so the only way to find a team is to already know its code.
+    match /joinCodes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      // Only the owner, and only for the code the team document ends up holding.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['teamId'])
+        && existsAfter(teamPath(request.resource.data.teamId))
+        && getAfter(teamPath(request.resource.data.teamId)).data.ownerUid == me()
+        && getAfter(teamPath(request.resource.data.teamId)).data.joinCode == code;
+      allow delete: if signedIn()
+        && exists(teamPath(resource.data.teamId))
+        && get(teamPath(resource.data.teamId)).data.ownerUid == me();
+      allow update: if false;
+    }
+  }
+}

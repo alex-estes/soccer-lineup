@@ -4,6 +4,7 @@ import { useAppState } from '../../state/AppContext';
 import { autoGenerateAction } from '../../state/reducer';
 import { availablePlayersForGame, getGame } from '../../lib/utils';
 import { IconButton } from '../Shared/IconButton';
+import { playersOnField } from '../../constants';
 import styles from './Content.module.css';
 
 export function Content() {
@@ -12,8 +13,9 @@ export function Content() {
   function handleGenerate() {
     const game = getGame(state.games, state.curGame);
     if (!game) return;
-    if (availablePlayersForGame(state.players, game).length < game.formation.playersOnField) {
-      alert(`Need at least ${game.formation.playersOnField} available players.`);
+    const needed = playersOnField(game.positions);
+    if (availablePlayersForGame(state.players, game).length < needed) {
+      alert(`Need at least ${needed} available players.`);
       return;
     }
     dispatch(autoGenerateAction(state));

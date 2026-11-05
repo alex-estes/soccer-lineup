@@ -1,7 +1,6 @@
 import { IconArmchair } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
-import { availablePlayersForGame, getGame } from '../../lib/utils';
-import { POSITIONS } from '../../constants';
+import { availablePlayersForGame, getGame, namesOnField } from '../../lib/utils';
 import styles from './BenchRow.module.css';
 
 interface Props {
@@ -16,8 +15,7 @@ export function BenchRow({ rIdx, isPlayed }: Props) {
 
   if (!rot || !game) return null;
 
-  const onField = new Set<string>();
-  POSITIONS.forEach(pos => rot[pos].forEach(p => { if (p) onField.add(p); }));
+  const onField = new Set(namesOnField(rot));
 
   const benchNames = rot.bench;
   const available = availablePlayersForGame(state.players, game).filter(p => !onField.has(p) && !benchNames.includes(p));

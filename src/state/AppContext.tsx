@@ -1,11 +1,13 @@
 import { createContext, useContext } from 'react';
 import type { Dispatch } from 'react';
+import type { User } from 'firebase/auth';
 import type { AppState } from '../types';
 import type { Action } from './reducer';
 
 interface AppContextValue {
   state: AppState;
   dispatch: Dispatch<Action>;
+  user: User;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

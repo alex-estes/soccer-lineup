@@ -1,4 +1,6 @@
-import { IconBallFootball, IconTrophy } from '@tabler/icons-react';
+import { IconTrophy } from '@tabler/icons-react';
+import { SportIcon } from '../Shared/SportIcon';
+import { SPORTS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
 import { Button } from '../Shared/Button';
@@ -27,8 +29,8 @@ export function StickyFooter({ onOpenGoals }: Props) {
         </Button>
       )}
       <Button variant="primary" onClick={onOpenGoals}>
-        <IconBallFootball size={24} />
-        Goals
+        <SportIcon sport={state.team.sport} />
+        {SPORTS[state.team.sport].scoreLabel}
       </Button>
     </div>
   );

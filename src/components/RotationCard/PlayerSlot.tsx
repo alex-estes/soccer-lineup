@@ -1,20 +1,22 @@
 import { IconLock, IconLockOpen, IconReplace } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { Chip } from '../Shared/Chip';
-import { levelOf, POSITION_SKILL, skillLetter } from '../../lib/skills';
-import type { Position } from '../../types';
+import { levelOf, skillLetter } from '../../lib/skills';
+import type { PositionId, SkillKey } from '../../types';
 import styles from './PlayerSlot.module.css';
 
 interface Props {
   rIdx: number;
-  pos: Position;
+  pos: PositionId;
+  /** The skill rating shown next to the name. */
+  skill: SkillKey;
   sIdx: number;
   playerName: string | null;
   locked: boolean;
   isPlayed: boolean;
 }
 
-export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed }: Props) {
+export function PlayerSlot({ rIdx, pos, skill, sIdx, playerName, locked, isPlayed }: Props) {
   const { state, dispatch } = useAppState();
 
   const swapSel = state.swapSel;
@@ -67,7 +69,7 @@ export function PlayerSlot({ rIdx, pos, sIdx, playerName, locked, isPlayed }: Pr
             <span className={styles.name}>{playerName}</span>
             {state.settings.useSkillRatings && (
               <Chip tone="neutral" size="sm">
-                {skillLetter(levelOf(state.players, playerName, POSITION_SKILL[pos]))}
+                {skillLetter(levelOf(state.players, playerName, skill))}
               </Chip>
             )}
           </div>

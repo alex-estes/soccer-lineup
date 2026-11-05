@@ -1,10 +1,11 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { autoGenerate } from './autoGenerate';
-import { POSITIONS } from '../constants';
 import {
-  F222, F311, NAMES, TWO_WEAK_DEFENDERS,
-  fieldNames, longestBenchRun, mkPlayers, mkState, playingTimeSpread, seededRandom, weakCountIn,
+  F222, F311, HOOPS, NAMES, TWO_WEAK_DEFENDERS,
+  fieldNames, longestBenchRun, mkHoopsPlayers, mkPlayers, mkState, playingTimeSpread, seededRandom,
+  soccerLineup, weakCountIn,
 } from '../test/fixtures';
+import type { PositionDef } from '../types';
 import type { Ratings } from '../test/fixtures';
 
 // Enough runs to be convincing without slowing the suite down: 6 rotations each.
@@ -52,7 +53,7 @@ describe('weak-player cap', () => {
     let unfilledForwards = 0;
     for (let i = 0; i < 100; i++) {
       const rots = autoGenerate(mkState(mkPlayers(NAMES, {}, allWeakOffense), F311));
-      rots.forEach(r => { if (r.fwd.some(n => !n)) unfilledForwards++; });
+      rots.forEach(r => { if (r.slots.fwd.some(n => !n)) unfilledForwards++; });
     }
     expect(unfilledForwards).toBe(0);
   });
@@ -84,7 +85,7 @@ describe('weak-player cap', () => {
     let unfilled = 0;
     for (let i = 0; i < 100; i++) {
       const rots = autoGenerate(mkState(mkPlayers(NAMES, allWeak)));
-      rots.forEach(r => POSITIONS.forEach(pos => r[pos].forEach(n => { if (!n) unfilled++; })));
+      rots.forEach(r => Object.values(r.slots).forEach(line => line.forEach(n => { if (!n) unfilled++; })));
     }
     expect(unfilled).toBe(0);
   });
@@ -124,11 +125,11 @@ describe('locked slots', () => {
     let pairedWithWeak = 0;
     for (let i = 0; i < RUNS; i++) {
       const state = mkState(mkPlayers(NAMES, TWO_WEAK_DEFENDERS));
-      state.games[0].rotations.forEach(r => { r.def[0] = 'Alex'; r.locked.def[0] = true; });
+      state.games[0].rotations.forEach(r => { r.slots.def[0] = 'Alex'; r.locked.def[0] = true; });
       const rots = autoGenerate(state);
       rots.forEach(r => {
-        expect(r.def[0]).toBe('Alex');
-        if (r.def[1] && TWO_WEAK_DEFENDERS[r.def[1]] === 1) pairedWithWeak++;
+        expect(r.slots.def[0]).toBe('Alex');
+        if (r.slots.def[1] && TWO_WEAK_DEFENDERS[r.slots.def[1]] === 1) pairedWithWeak++;
       });
     }
     expect(pairedWithWeak).toBe(0);
@@ -137,22 +138,22 @@ describe('locked slots', () => {
   it('respects locks it cannot satisfy rather than fighting them', () => {
     const state = mkState(mkPlayers(NAMES, TWO_WEAK_DEFENDERS));
     state.games[0].rotations.forEach(r => {
-      r.def[0] = 'Alex'; r.locked.def[0] = true;
-      r.def[1] = 'Taylor'; r.locked.def[1] = true;
+      r.slots.def[0] = 'Alex'; r.locked.def[0] = true;
+      r.slots.def[1] = 'Taylor'; r.locked.def[1] = true;
     });
     const rots = autoGenerate(state);
     rots.forEach(r => {
-      expect(r.def[0]).toBe('Alex');
-      expect(r.def[1]).toBe('Taylor');
+      expect(r.slots.def[0]).toBe('Alex');
+      expect(r.slots.def[1]).toBe('Taylor');
     });
   });
 
   it('tolerates a locked slot holding a name that is on no roster', () => {
     const state = mkState(mkPlayers(NAMES, TWO_WEAK_DEFENDERS));
-    state.games[0].rotations.forEach(r => { r.def[0] = 'Ghost'; r.locked.def[0] = true; });
+    state.games[0].rotations.forEach(r => { r.slots.def[0] = 'Ghost'; r.locked.def[0] = true; });
     const rots = autoGenerate(state);
     expect(rots).toHaveLength(6);
-    rots.forEach(r => expect(r.def[0]).toBe('Ghost'));
+    rots.forEach(r => expect(r.slots.def[0]).toBe('Ghost'));
   });
 });
 
@@ -167,7 +168,7 @@ describe('talent-aware tiebreak', () => {
         const rots = autoGenerate(mkState(mkPlayers(NAMES, defense), F222, on));
         rots.forEach(r => {
           total++;
-          if (r.def.every(n => n !== null && defense[n] === 3)) both++;
+          if (r.slots.def.every(n => n !== null && defense[n] === 3)) both++;
         });
       }
       return both / total;
@@ -178,5 +179,71 @@ describe('talent-aware tiebreak', () => {
     const on = rateOfAllStrongDefense(true);
 
     expect(on).toBeLessThan(off * 0.8);
+  });
+});
+
+describe('editable positions and rotation counts', () => {
+  it('fills every rotation of a basketball game, five on court', () => {
+    const state = mkState(mkHoopsPlayers(NAMES), HOOPS, true, { sport: 'basketball', rotations: 8 });
+    const rots = autoGenerate(state);
+    expect(rots).toHaveLength(8);
+    rots.forEach(r => {
+      expect(r.slots.guard).toHaveLength(2);
+      expect(r.slots.forward).toHaveLength(2);
+      expect(r.slots.center).toHaveLength(1);
+      expect(fieldNames(r)).toHaveLength(5);
+      expect(r.bench).toHaveLength(4);
+    });
+  });
+
+  it('keeps basketball playing time even: 9 players × 8 rotations × 5 spots splits 40 ways', () => {
+    let worstSpread = 0;
+    let worstBenchRun = 0;
+    for (let i = 0; i < RUNS; i++) {
+      const state = mkState(mkHoopsPlayers(NAMES), HOOPS, true, { sport: 'basketball', rotations: 8 });
+      const rots = autoGenerate(state);
+      worstSpread = Math.max(worstSpread, playingTimeSpread(rots, NAMES));
+      worstBenchRun = Math.max(worstBenchRun, longestBenchRun(rots));
+    }
+    // 40 court spots over 9 players can't divide evenly, so 1 is the best possible.
+    expect(worstSpread).toBe(1);
+    expect(worstBenchRun).toBe(1);
+  });
+
+  it('applies the weak cap through the single overall rating', () => {
+    const overall = { Alex: 1, Taylor: 1, Morgan: 1, Casey: 3, Riley: 2, Jamie: 3, Henry: 2, Lucy: 2, Jordan: 3 };
+    let violations = 0;
+    for (let i = 0; i < RUNS; i++) {
+      const state = mkState(mkHoopsPlayers(NAMES, overall), HOOPS, true, { sport: 'basketball', rotations: 8 });
+      autoGenerate(state).forEach(r => {
+        if (weakCountIn(r, 'guard', overall) > 1) violations++;
+        if (weakCountIn(r, 'forward', overall) > 1) violations++;
+      });
+    }
+    expect(violations).toBe(0);
+  });
+
+  it('handles a position a coach added, governed by the skill they chose', () => {
+    const lineup: PositionDef[] = [
+      ...soccerLineup(2, 1, 1),
+      { id: 'goalie1', name: 'Goalie', count: 1, skill: 'defense' },
+    ];
+    let violations = 0;
+    for (let i = 0; i < RUNS; i++) {
+      const rots = autoGenerate(mkState(mkPlayers(NAMES, TWO_WEAK_DEFENDERS), lineup, true, { rotations: 4 }));
+      expect(rots).toHaveLength(4);
+      rots.forEach(r => {
+        expect(r.slots.goalie1).toHaveLength(1);
+        expect(r.slots.goalie1[0]).not.toBeNull();
+        expect(fieldNames(r)).toHaveLength(5);
+        if (weakCountIn(r, 'def', TWO_WEAK_DEFENDERS) > 1) violations++;
+      });
+    }
+    expect(violations).toBe(0);
+  });
+
+  it('leaves the lineup alone when there are too few players to fill it', () => {
+    const state = mkState(mkHoopsPlayers(['A', 'B', 'C', 'D']), HOOPS, true, { sport: 'basketball' });
+    expect(autoGenerate(state)).toBe(state.games[0].rotations);
   });
 });

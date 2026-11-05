@@ -33,11 +33,13 @@ export function GameDayPage(_props: Props) {
   // The URL is the source of truth for "which game" — sync it into the
   // reducer's curGame so the existing curGame-driven components (Content,
   // RotationCard, ...) keep working unchanged.
+  // Waits for the games to arrive before deciding the id is bad, or a reload / deep link
+  // would always bounce home.
   useEffect(() => {
-    if (!gameId) return;
+    if (!gameId || !state.isLoaded) return;
     if (!getGame(state.games, gameId)) { navigate('/', { replace: true }); return; }
     if (state.curGame !== gameId) dispatch({ type: 'SET_CUR_GAME', id: gameId });
-  }, [gameId, state.games, state.curGame, dispatch, navigate]);
+  }, [gameId, state.games, state.curGame, state.isLoaded, dispatch, navigate]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -68,9 +70,11 @@ export function GameDayPage(_props: Props) {
         key={settingsOpen ? 'open' : 'closed'}
         open={settingsOpen}
         game={game}
+        sport={state.team.sport}
+        teamSettings={state.settings}
         onClose={() => setSettingsOpen(false)}
-        onConfirm={formation => {
-          dispatch({ type: 'UPDATE_GAME_FORMATION', gameId: game.id, formation });
+        onConfirm={(positions, rotationCount) => {
+          dispatch({ type: 'UPDATE_GAME_SETUP', gameId: game.id, positions, rotationCount });
           setSettingsOpen(false);
         }}
       />

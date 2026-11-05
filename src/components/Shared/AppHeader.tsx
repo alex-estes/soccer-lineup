@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconMenu, IconUser, IconLogout, IconHome, IconSettings } from '@tabler/icons-react';
+import { IconMenu, IconUser, IconLogout, IconHome, IconSettings, IconUsersGroup } from '@tabler/icons-react';
 import type { User } from 'firebase/auth';
 import { DropdownMenu } from './DropdownMenu';
 import styles from './AppHeader.module.css';
@@ -10,9 +10,11 @@ interface Props {
   onSignOut: () => void;
   /** Rendered where the title normally sits — for pages that need a back arrow + custom title instead. */
   center?: ReactNode;
+  /** The open team's name. Without one (the Teams page) the header has no team links. */
+  title?: string;
 }
 
-export function AppHeader({ user, onSignOut, center }: Props) {
+export function AppHeader({ user, onSignOut, center, title }: Props) {
   const [navOpen, setNavOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const navigate = useNavigate();
@@ -28,13 +30,16 @@ export function AppHeader({ user, onSignOut, center }: Props) {
             align="left"
             onClose={() => setNavOpen(false)}
             items={[
-              { label: 'Home', icon: <IconHome size={24} />, onClick: () => navigate('/') },
-              { label: 'Settings', icon: <IconSettings size={24} />, onClick: () => navigate('/settings') },
+              ...(title !== undefined ? [
+                { label: 'Home', icon: <IconHome size={24} />, onClick: () => navigate('/') },
+                { label: 'Team Settings', icon: <IconSettings size={24} />, onClick: () => navigate('/settings') },
+              ] : []),
+              { label: 'Switch Team', icon: <IconUsersGroup size={24} />, onClick: () => navigate('/teams') },
             ]}
           />
         )}
       </div>
-      {center ?? <span className={styles.title}>SOCCER LINEUP</span>}
+      {center ?? <span className={styles.title}>{(title ?? 'Teams').toUpperCase()}</span>}
       <div className={styles.avatarWrap}>
         <button type="button" className={styles.avatarButton} onClick={() => setAvatarOpen(o => !o)} title={user.displayName ?? 'Account'}>
           {user.photoURL ? (
