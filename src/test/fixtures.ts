@@ -1,8 +1,8 @@
-import { emptyRotations } from '../lib/utils';
+import { emptyRotations, namesOnField } from '../lib/utils';
 import { normalizeSkills } from '../lib/skills';
-import { POSITIONS } from '../constants';
-import { initialState } from '../state/reducer';
-import type { AppState, FormationSettings, Player, Position, Rotation } from '../types';
+import { SPORTS } from '../constants';
+import { makeInitialState } from '../state/reducer';
+import type { AppState, Player, PositionDef, PositionId, Rotation, SportId, TeamMeta } from '../types';
 
 /**
  * mulberry32 — a tiny seeded PRNG. The generator leans on Math.random for shuffling, so
@@ -24,8 +24,23 @@ export type Ratings = Record<string, number>;
 
 export const NAMES = ['Alex', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Jamie', 'Henry', 'Lucy', 'Jordan'];
 
-export const F222: FormationSettings = { playersOnField: 6, defenders: 2, midfielders: 2, forwards: 2 };
-export const F311: FormationSettings = { playersOnField: 5, defenders: 3, midfielders: 1, forwards: 1 };
+/** Soccer lines with the original def / mid / fwd ids and skills. */
+export function soccerLineup(def: number, mid: number, fwd: number): PositionDef[] {
+  const [d, m, f] = SPORTS.soccer.defaultSettings.positions;
+  return [{ ...d, count: def }, { ...m, count: mid }, { ...f, count: fwd }];
+}
+
+export const F222 = soccerLineup(2, 2, 2);
+export const F311 = soccerLineup(3, 1, 1);
+/** Basketball's default: Guards 2 / Forwards 2 / Center 1, all rated by "overall". */
+export const HOOPS = SPORTS.basketball.defaultSettings.positions;
+
+export function mkTeam(sport: SportId = 'soccer'): TeamMeta {
+  return {
+    id: 'test-team', name: 'Test FC', sport, ownerUid: 'owner',
+    memberUids: ['owner'], memberNames: { owner: 'Coach' }, joinCode: 'ABCDEFGH',
+  };
+}
 
 /** A spread of ratings with exactly two players weak on defense. */
 export const TWO_WEAK_DEFENDERS: Ratings = {
@@ -36,43 +51,52 @@ export function mkPlayers(names: string[] = NAMES, defense: Ratings = {}, offens
   return names.map(name => ({
     name,
     active: true,
-    skills: normalizeSkills({ defense: defense[name] ?? 0, offense: offense[name] ?? 0 }),
+    skills: normalizeSkills({ defense: defense[name] ?? 0, offense: offense[name] ?? 0 }, 'soccer'),
+  }));
+}
+
+/** Basketball players with a single overall rating. */
+export function mkHoopsPlayers(names: string[] = NAMES, overall: Ratings = {}): Player[] {
+  return names.map(name => ({
+    name,
+    active: true,
+    skills: normalizeSkills({ overall: overall[name] ?? 0 }, 'basketball'),
   }));
 }
 
 export function mkState(
   players: Player[],
-  formation: FormationSettings = F222,
+  positions: PositionDef[] = F222,
   useSkillRatings = true,
+  { sport = 'soccer', rotations = 6 }: { sport?: SportId; rotations?: number } = {},
 ): AppState {
   const id = 'test-game';
+  const settings = { positions, rotationCount: rotations, useSkillRatings };
   return {
-    ...initialState,
-    players,
+    ...makeInitialState(mkTeam(sport), players, settings),
     games: [{
       id,
       name: 'Opponent',
-      rotations: emptyRotations(formation),
+      rotations: emptyRotations(positions, rotations),
+      positions,
+      scores: {},
       opponentScore: 0,
       completed: false,
       excludedPlayers: [],
-      formation,
+      createdAt: 1,
     }],
     curGame: id,
-    settings: { defaultFormation: formation, useSkillRatings },
     isLoaded: true,
   };
 }
 
 /** Players standing in one line who are rated C at the given levels map. */
-export function weakCountIn(rot: Rotation, pos: Position, levels: Ratings): number {
-  return rot[pos].filter(n => n !== null && levels[n] === 1).length;
+export function weakCountIn(rot: Rotation, pos: PositionId, levels: Ratings): number {
+  return rot.slots[pos].filter(n => n !== null && levels[n] === 1).length;
 }
 
 export function fieldNames(rot: Rotation): string[] {
-  const out: string[] = [];
-  POSITIONS.forEach(pos => rot[pos].forEach(n => { if (n) out.push(n); }));
-  return out;
+  return namesOnField(rot);
 }
 
 export function playingTimeSpread(rots: Rotation[], names: string[]): number {

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { IconChartBar } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
-import { getGameStats, getCumulativeStats } from '../../lib/stats';
+import { getGameStats, getCumulativeStats, statsColumns } from '../../lib/stats';
 import { SegmentedControl } from '../../components/Shared/SegmentedControl';
 import { PlayerStatsTable } from '../../components/Shared/PlayerStatsTable';
 import type { Game } from '../../types';
@@ -20,6 +20,9 @@ export function GameDayStats({ game }: Props) {
   );
 
   const dimNames = useMemo(() => new Set(game.excludedPlayers), [game.excludedPlayers]);
+  const columns = state.statsScope === 'season'
+    ? statsColumns(state.settings.positions, state.games)
+    : game.positions;
 
   return (
     <section className={styles.section}>
@@ -36,7 +39,7 @@ export function GameDayStats({ game }: Props) {
             { value: 'season', label: 'Season' },
           ]}
         />
-        <PlayerStatsTable players={state.players} stats={stats} dimNames={dimNames} bare />
+        <PlayerStatsTable players={state.players} stats={stats} positions={columns} sport={state.team.sport} dimNames={dimNames} bare />
       </div>
     </section>
   );

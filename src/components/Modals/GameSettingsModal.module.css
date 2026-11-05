@@ -1,0 +1,27 @@
+/* Keep header and footer on screen when a lineup has many positions. */
+.card {
+  max-height: calc(100dvh - 2 * var(--space-16));
+}
+
+.body {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.total {
+  min-width: 40px;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.warning {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-warning);
+  text-align: center;
+}

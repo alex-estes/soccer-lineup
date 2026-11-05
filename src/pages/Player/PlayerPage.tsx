@@ -2,16 +2,25 @@ import { useEffect, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   IconAward, IconStars, IconDiamond, IconHeartHandshake,
-  IconShield, IconSwords, IconUsers, IconHeart,
+  IconShield, IconSwords, IconUsers, IconHeart, IconStar,
 } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
-import { getCumulativeStats, getGamesPlayed, statCell } from '../../lib/stats';
+import { getCumulativeStats, getGamesPlayed, statCell, statsColumns } from '../../lib/stats';
 import { normalizeSkills, skillLetter, SKILL_MAX, SKILL_MIN } from '../../lib/skills';
+import { positionColor, SPORTS, type SkillDef } from '../../constants';
 import { DetailHeader } from '../../components/Shared/DetailHeader';
 import { StatTile } from '../../components/Shared/StatTile';
 import { Stepper } from '../../components/Shared/Stepper';
 import type { SkillKey } from '../../types';
 import styles from './PlayerPage.module.css';
+
+const SKILL_ICONS: Record<string, ReactNode> = {
+  defense: <IconShield size={24} />,
+  offense: <IconSwords size={24} />,
+  teamwork: <IconUsers size={24} />,
+  kindness: <IconHeart size={24} />,
+  overall: <IconStar size={24} />,
+};
 
 interface SkillRowProps {
   icon: ReactNode;
@@ -36,6 +45,12 @@ function SkillRow({ icon, label, level, onChange }: SkillRowProps) {
   );
 }
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 export function PlayerPage() {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
@@ -52,10 +67,24 @@ export function PlayerPage() {
 
   if (!player) return null;
 
+  const sport = SPORTS[state.team.sport];
   const stats = getCumulativeStats(state)[player.name];
-  const skills = normalizeSkills(player.skills);
+  const skills = normalizeSkills(player.skills, state.team.sport);
   const setSkill = (skill: SkillKey) => (level: number) =>
     dispatch({ type: 'SET_PLAYER_SKILL', name: player.name, skill, level });
+
+  const columns = statsColumns(state.settings.positions, state.games);
+  const hard = sport.skills.filter(s => s.group === 'hard');
+  const soft = sport.skills.filter(s => s.group === 'soft');
+  const row = (s: SkillDef) => (
+    <SkillRow
+      key={s.key}
+      icon={SKILL_ICONS[s.key] ?? <IconStar size={24} />}
+      label={s.label}
+      level={skills[s.key] ?? 0}
+      onChange={setSkill(s.key)}
+    />
+  );
 
   return (
     <>
@@ -67,14 +96,22 @@ export function PlayerPage() {
             <span>PLAYER STATS</span>
           </div>
           <div className={styles.statsRow}>
-            <StatTile tone="teal" value={statCell(stats?.goals)} label="GOALS" />
+            <StatTile tone="teal" value={statCell(stats?.score)} label={sport.scoreLabel.toUpperCase()} />
             <StatTile tone="neutral" value={statCell(getGamesPlayed(state, player.name))} label="GAMES" />
           </div>
-          <div className={styles.statsRow}>
-            <StatTile tone="def" value={statCell(stats?.def)} label="DEF" />
-            <StatTile tone="mid" value={statCell(stats?.mid)} label="MID" />
-            <StatTile tone="fwd" value={statCell(stats?.fwd)} label="FWD" />
-          </div>
+          {chunk(columns.map((p, i) => ({ p, i })), 3).map((group, gi) => (
+            <div className={styles.statsRow} key={gi}>
+              {group.map(({ p, i }) => (
+                <StatTile
+                  key={p.id}
+                  tone="position"
+                  color={positionColor(i)}
+                  value={statCell(stats?.byPos[p.id])}
+                  label={p.name.toUpperCase()}
+                />
+              ))}
+            </div>
+          ))}
         </section>
 
         <section className={styles.section}>
@@ -83,18 +120,22 @@ export function PlayerPage() {
             <span>SKILLS</span>
           </div>
           <div className={styles.card}>
-            <div className={styles.groupLabel}>
-              <IconDiamond size={24} />
-              <span>HARD SKILLS</span>
-            </div>
-            <SkillRow icon={<IconShield size={24} />} label="Defense" level={skills.defense} onChange={setSkill('defense')} />
-            <SkillRow icon={<IconSwords size={24} />} label="Offense" level={skills.offense} onChange={setSkill('offense')} />
-            <div className={styles.groupLabel}>
-              <IconHeartHandshake size={24} />
-              <span>SOFT SKILLS</span>
-            </div>
-            <SkillRow icon={<IconUsers size={24} />} label="Teamwork" level={skills.teamwork} onChange={setSkill('teamwork')} />
-            <SkillRow icon={<IconHeart size={24} />} label="Kindness" level={skills.kindness} onChange={setSkill('kindness')} />
+            {soft.length > 0 && (
+              <div className={styles.groupLabel}>
+                <IconDiamond size={24} />
+                <span>HARD SKILLS</span>
+              </div>
+            )}
+            {hard.map(row)}
+            {soft.length > 0 && (
+              <>
+                <div className={styles.groupLabel}>
+                  <IconHeartHandshake size={24} />
+                  <span>SOFT SKILLS</span>
+                </div>
+                {soft.map(row)}
+              </>
+            )}
           </div>
         </section>
       </main>

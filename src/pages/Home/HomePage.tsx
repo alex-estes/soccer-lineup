@@ -5,8 +5,8 @@ import {
 } from '@tabler/icons-react';
 import type { User } from 'firebase/auth';
 import { useAppState } from '../../state/AppContext';
-import { getSeasonRecord, getTeamScore, getGameResult, getCumulativeStats } from '../../lib/stats';
-import { POSITIONS } from '../../constants';
+import { getSeasonRecord, getTeamScore, getGameResult, getCumulativeStats, statsColumns } from '../../lib/stats';
+import { namesOnField } from '../../lib/utils';
 import { AppHeader } from '../../components/Shared/AppHeader';
 import { StatTile } from '../../components/Shared/StatTile';
 import { GameCard } from '../../components/Shared/GameCard';
@@ -44,7 +44,7 @@ export function HomePage({ user, onSignOut }: Props) {
     const player = state.players[index];
     if (!player) return;
     const hasHistory = state.games.some(g =>
-      g.completed && g.rotations.some(r => POSITIONS.some(pos => r[pos].includes(player.name)))
+      g.completed && g.rotations.some(r => namesOnField(r).includes(player.name))
     );
     if (hasHistory && !confirm(`${player.name} has played in completed games. Their stats will be removed. Delete anyway?`)) return;
     dispatch({ type: 'REMOVE_PLAYER', index });
@@ -64,7 +64,7 @@ export function HomePage({ user, onSignOut }: Props) {
 
   return (
     <>
-      <AppHeader user={user} onSignOut={onSignOut} />
+      <AppHeader user={user} onSignOut={onSignOut} title={state.team.name} />
       <main className={styles.content}>
         <section className={styles.section}>
           <div className={styles.sectionTitle}>
@@ -109,7 +109,12 @@ export function HomePage({ user, onSignOut }: Props) {
             <IconChartBar size={24} />
             <span>PLAYER STATS</span>
           </div>
-          <PlayerStatsTable players={state.players} stats={cumulativeStats} />
+          <PlayerStatsTable
+            players={state.players}
+            stats={cumulativeStats}
+            positions={statsColumns(state.settings.positions, state.games)}
+            sport={state.team.sport}
+          />
         </section>
 
         <section className={styles.section}>

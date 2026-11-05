@@ -1,9 +1,9 @@
 import { RotationHeader } from './RotationHeader';
 import { PositionGroup } from './PositionGroup';
 import { BenchRow } from './BenchRow';
-import { POSITIONS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
 import { getGame } from '../../lib/utils';
+import { positionColor } from '../../constants';
 import styles from './RotationCard.module.css';
 
 interface Props {
@@ -24,10 +24,11 @@ export function RotationCard({ rIdx }: Props) {
   return (
     <div className={[styles.card, rot.played ? styles.played : ''].filter(Boolean).join(' ')} data-rotation-card>
       <RotationHeader rIdx={rIdx} played={rot.played} isCurrentRotation={isCurrentRotation} />
-      {POSITIONS.map(pos => (
+      {game.positions.map((pos, i) => (
         <PositionGroup
-          key={pos}
+          key={pos.id}
           pos={pos}
+          color={positionColor(i)}
           rIdx={rIdx}
           rot={rot}
           isPlayed={rot.played}

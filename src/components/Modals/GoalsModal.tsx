@@ -1,4 +1,6 @@
-import { IconBallFootball, IconShield, IconTrophy, IconX } from '@tabler/icons-react';
+import { IconShield, IconTrophy, IconX } from '@tabler/icons-react';
+import { SportIcon } from '../Shared/SportIcon';
+import { SPORTS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
 import { getLiveResult } from '../../lib/stats';
 import { getGame } from '../../lib/utils';
@@ -24,9 +26,7 @@ export function GoalsModal({ open, onClose }: Props) {
   const resultTone = result === 'W' ? 'win' : result === 'L' ? 'loss' : 'tie';
   const resultLabel = result === 'W' ? 'WINNING' : result === 'L' ? 'LOSING' : 'TIED';
 
-  function getGoalCount(name: string): number {
-    return state.goals[name]?.[gameId] ?? 0;
-  }
+  const scoreLabel = SPORTS[state.team.sport].scoreLabel;
 
   const allPlayed = game.rotations.length > 0 && game.rotations.every(r => r.played);
 
@@ -35,8 +35,8 @@ export function GoalsModal({ open, onClose }: Props) {
       <div className={[formStyles.card, styles.card].join(' ')}>
         <div className={formStyles.header}>
           <div className={formStyles.titleGroup}>
-            <IconBallFootball size={24} />
-            <span className={formStyles.title}>GOALS — {game.name.toUpperCase()}</span>
+            <SportIcon sport={state.team.sport} />
+            <span className={formStyles.title}>{scoreLabel.toUpperCase()} — {game.name.toUpperCase()}</span>
           </div>
           <IconButton icon={<IconX size={24} />} onClick={onClose} title="Close" />
         </div>
@@ -46,8 +46,9 @@ export function GoalsModal({ open, onClose }: Props) {
             <div className={styles.row} key={name}>
               <span className={styles.name}>{name}</span>
               <Stepper
-                value={getGoalCount(name)}
-                onChange={v => dispatch({ type: 'SET_GOALS', playerName: name, gameId, count: v })}
+                value={game.scores[name] ?? 0}
+                onChange={v => dispatch({ type: 'SET_SCORE', playerName: name, gameId, count: v })}
+                label={`${name}'s ${scoreLabel.toLowerCase()}`}
               />
             </div>
           ))}

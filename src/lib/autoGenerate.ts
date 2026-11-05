@@ -1,14 +1,10 @@
-import { POSITIONS } from '../constants';
-import type { AppState, Player, Position, Rotation, SkillKey } from '../types';
-import { availablePlayersForGame, ensureShape, getGame, shuffleArr } from './utils';
-import { lineWeakCap, normalizeSkills, POSITION_SKILL, SKILL_LOW, SKILL_NEUTRAL } from './skills';
+import { playersOnField } from '../constants';
+import type { AppState, Player, PositionDef, PositionId, Rotation } from '../types';
+import { availablePlayersForGame, cloneRotation, ensureShape, getGame, shuffleArr } from './utils';
+import { clampLevel, lineWeakCap, SKILL_LOW, SKILL_NEUTRAL } from './skills';
 
-interface Counts {
-  def: number;
-  mid: number;
-  fwd: number;
-  total: number;
-}
+/** Rotations spent at each position id, plus `total` (the key can't clash: ids are generated). */
+type Counts = Record<PositionId, number> & { total: number };
 
 /**
  * Rating lookups for one generation run. Built from the FULL roster rather than the
@@ -16,19 +12,22 @@ interface Counts {
  * still rated correctly. A name on no roster at all — a deleted player still referenced
  * by a locked slot — reads as unrated, which never blocks anything.
  */
-function buildSkillIndex(players: Player[]) {
-  const levels: Record<string, Record<SkillKey, number>> = {};
-  players.forEach(p => { levels[p.name] = normalizeSkills(p.skills); });
+function buildSkillIndex(players: Player[], positions: PositionDef[]) {
+  const byName = new Map(players.map(p => [p.name, p]));
+  const skillOf = new Map(positions.map(p => [p.id, p.skill]));
 
-  const levelAt = (pos: Position, name: string | null | undefined): number =>
-    name ? (levels[name]?.[POSITION_SKILL[pos]] ?? 0) : 0;
+  const levelAt = (pos: PositionId, name: string | null | undefined): number => {
+    if (!name) return 0;
+    const skill = skillOf.get(pos);
+    return skill ? clampLevel(byName.get(name)?.skills?.[skill]) : 0;
+  };
 
   return {
     /** Weak at the skill governing `pos`. Unrated (0) is deliberately not weak. */
-    isLow: (pos: Position, name: string | null | undefined): boolean =>
+    isLow: (pos: PositionId, name: string | null | undefined): boolean =>
       levelAt(pos, name) === SKILL_LOW,
     /** Level for averaging, with unrated counted as neutral so it never skews a line. */
-    strengthAt: (pos: Position, name: string | null | undefined): number =>
+    strengthAt: (pos: PositionId, name: string | null | undefined): number =>
       levelAt(pos, name) || SKILL_NEUTRAL,
   };
 }
@@ -44,9 +43,9 @@ type SkillIndex = ReturnType<typeof buildSkillIndex>;
  * Only ever touches two field slots at a time and never reads or writes `rot.bench`, so
  * who plays this rotation is untouched by construction.
  */
-function repairWeakLines(rot: Rotation, counts: Record<string, Counts>, skills: SkillIndex): void {
-  POSITIONS.forEach(pos => {
-    const size = rot[pos].length;
+function repairWeakLines(rot: Rotation, posIds: PositionId[], counts: Record<string, Counts>, skills: SkillIndex): void {
+  posIds.forEach(pos => {
+    const size = rot.slots[pos].length;
     if (size === 0) return;
     const cap = lineWeakCap(size);
 
@@ -55,18 +54,18 @@ function repairWeakLines(rot: Rotation, counts: Record<string, Counts>, skills: 
     // is belt and braces.
     let guard = size + 1;
     while (guard-- > 0) {
-      if (rot[pos].filter(n => skills.isLow(pos, n)).length <= cap) break;
+      if (rot.slots[pos].filter(n => skills.isLow(pos, n)).length <= cap) break;
 
-      const outIdx = rot[pos].findIndex((n, i) => skills.isLow(pos, n) && !rot.locked[pos][i]);
+      const outIdx = rot.slots[pos].findIndex((n, i) => skills.isLow(pos, n) && !rot.locked[pos][i]);
       if (outIdx === -1) break; // every excess weak player is locked in — locks win
 
-      const outName = rot[pos][outIdx]!;
-      const donor = findDonor(rot, counts, skills, pos, outName);
+      const outName = rot.slots[pos][outIdx]!;
+      const donor = findDonor(rot, posIds, counts, skills, pos, outName);
       if (!donor) break; // nothing legal to trade with — leave it for the WEAK flag
 
-      const inName = rot[donor.pos][donor.sIdx]!;
-      rot[pos][outIdx] = inName;
-      rot[donor.pos][donor.sIdx] = outName;
+      const inName = rot.slots[donor.pos][donor.sIdx]!;
+      rot.slots[pos][outIdx] = inName;
+      rot.slots[donor.pos][donor.sIdx] = outName;
 
       // Each player loses a credit where they left and gains one where they landed.
       // `.total` is deliberately untouched: both were already on the field. The guards
@@ -85,19 +84,20 @@ function repairWeakLines(rot: Rotation, counts: Record<string, Counts>, skills: 
  */
 function findDonor(
   rot: Rotation,
+  posIds: PositionId[],
   counts: Record<string, Counts>,
   skills: SkillIndex,
-  pos: Position,
+  pos: PositionId,
   outName: string,
-): { pos: Position; sIdx: number; name: string } | null {
-  const candidates: { pos: Position; sIdx: number; name: string }[] = [];
+): { pos: PositionId; sIdx: number; name: string } | null {
+  const candidates: { pos: PositionId; sIdx: number; name: string }[] = [];
 
-  POSITIONS.forEach(p2 => {
+  posIds.forEach(p2 => {
     if (p2 === pos) return;
-    const donorCap = lineWeakCap(rot[p2].length);
-    const donorWeak = rot[p2].filter(n => skills.isLow(p2, n)).length;
+    const donorCap = lineWeakCap(rot.slots[p2].length);
+    const donorWeak = rot.slots[p2].filter(n => skills.isLow(p2, n)).length;
 
-    rot[p2].forEach((n, i) => {
+    rot.slots[p2].forEach((n, i) => {
       if (!n) return;                          // empty slot — nothing to trade
       if (rot.locked[p2][i]) return;           // locked slot — immovable
       // Judged by the OVER-CAP line's skill: a donor who is also weak there solves nothing.
@@ -138,44 +138,38 @@ export function autoGenerate(
   if (!game) return [];
 
   const available = availablePlayersForGame(state.players, game);
-  if (available.length < game.formation.playersOnField) return game.rotations;
+  if (available.length < playersOnField(game.positions)) return game.rotations;
 
+  const posIds = game.positions.map(p => p.id);
   const useSkills = state.settings.useSkillRatings;
-  const skills = buildSkillIndex(state.players);
+  const skills = buildSkillIndex(state.players, game.positions);
+
+  const zeroCounts = (): Counts => {
+    const c = { total: 0 } as Counts;
+    posIds.forEach(id => { c[id] = 0; });
+    return c;
+  };
+
+  // Deep-clone the current game's rotations so we don't mutate state
+  const rotations: Rotation[] = game.rotations.map(r => ensureShape(cloneRotation(r), game.positions));
 
   // Counts from PLAYED rotations in the current game only
   const counts: Record<string, Counts> = {};
-  available.forEach(p => { counts[p] = { def: 0, mid: 0, fwd: 0, total: 0 }; });
+  available.forEach(p => { counts[p] = zeroCounts(); });
 
-  game.rotations.forEach(rot => {
-    ensureShape(rot);
+  rotations.forEach(rot => {
     if (!rot.played) return;
-    POSITIONS.forEach(pos => {
-      rot[pos].forEach(p => {
+    posIds.forEach(pos => {
+      rot.slots[pos].forEach(p => {
         if (p && counts[p]) { counts[p][pos]++; counts[p].total++; }
       });
     });
   });
 
-  // Deep-clone the current game's rotations so we don't mutate state
-  const rotations: Rotation[] = game.rotations.map(r => ({
-    ...r,
-    def: [...r.def],
-    mid: [...r.mid],
-    fwd: [...r.fwd],
-    bench: [...r.bench],
-    locked: {
-      def: [...r.locked.def],
-      mid: [...r.locked.mid],
-      fwd: [...r.locked.fwd],
-    },
-  }));
-
   // Track who was benched in the previous rotation to avoid consecutive bench
   let prevBench = new Set<string>();
 
   rotations.forEach(rot => {
-    ensureShape(rot);
     if (rot.played) {
       prevBench = new Set(rot.bench);
       return;
@@ -183,24 +177,24 @@ export function autoGenerate(
 
     // Collect locked player names
     const lockedNames = new Set<string>();
-    POSITIONS.forEach(pos => {
-      rot[pos].forEach((p, sIdx) => {
+    posIds.forEach(pos => {
+      rot.slots[pos].forEach((p, sIdx) => {
         if (rot.locked[pos][sIdx] && p) lockedNames.add(p);
       });
     });
 
     // Clear only unlocked slots and bench
-    POSITIONS.forEach(pos => {
-      rot[pos].forEach((_val, sIdx) => {
-        if (!rot.locked[pos][sIdx]) rot[pos][sIdx] = null;
+    posIds.forEach(pos => {
+      rot.slots[pos].forEach((_val, sIdx) => {
+        if (!rot.locked[pos][sIdx]) rot.slots[pos][sIdx] = null;
       });
     });
     rot.bench = [];
 
     // Open slots that need filling
-    const openSlots: { pos: Position; sIdx: number }[] = [];
-    POSITIONS.forEach(pos => {
-      rot[pos].forEach((_p, sIdx) => {
+    const openSlots: { pos: PositionId; sIdx: number }[] = [];
+    posIds.forEach(pos => {
+      rot.slots[pos].forEach((_p, sIdx) => {
         if (!rot.locked[pos][sIdx]) openSlots.push({ pos, sIdx });
       });
     });
@@ -231,16 +225,17 @@ export function autoGenerate(
     // no-back-to-back-bench rule are unaffected by the skill layer.
 
     // Group open slots by position
-    const byPos: Record<string, number[]> = { def: [], mid: [], fwd: [] };
+    const byPos: Record<string, number[]> = {};
+    posIds.forEach(id => { byPos[id] = []; });
     openSlots.forEach(s => byPos[s.pos].push(s.sIdx));
 
     // Assign field players to positions greedily by position-specific count.
     // Randomize position order each rotation to remove systematic bias.
     let remaining = [...fieldPlayers];
-    const posOrder = shuffleArr([...POSITIONS] as Position[]);
+    const posOrder = shuffleArr(posIds);
 
-    function place(pos: Position, sIdx: number, p: string) {
-      rot[pos][sIdx] = p;
+    function place(pos: PositionId, sIdx: number, p: string) {
+      rot.slots[pos][sIdx] = p;
       counts[p][pos]++;
       counts[p].total++;
     }
@@ -248,7 +243,7 @@ export function autoGenerate(
     // Mean strength of this rotation's field players, per position's governing skill.
     // Keeping each line near this is what "spread the talent" means when no cap is biting.
     const onField = [...fieldPlayers, ...lockedNames];
-    function targetFor(pos: Position): number {
+    function targetFor(pos: PositionId): number {
       if (!onField.length) return SKILL_NEUTRAL;
       return onField.reduce((a, n) => a + skills.strengthAt(pos, n), 0) / onField.length;
     }
@@ -265,13 +260,13 @@ export function autoGenerate(
         return;
       }
 
-      const cap = lineWeakCap(rot[pos].length);
+      const cap = lineWeakCap(rot.slots[pos].length);
       const target = targetFor(pos);
       // Seed from players already standing here — i.e. locked slots, which were never
       // cleared above and are invisible to `counts`.
-      let lowPlaced = rot[pos].filter(n => skills.isLow(pos, n)).length;
-      let lineSum = rot[pos].reduce((a, n) => a + (n ? skills.strengthAt(pos, n) : 0), 0);
-      let lineCount = rot[pos].filter(Boolean).length;
+      let lowPlaced = rot.slots[pos].filter(n => skills.isLow(pos, n)).length;
+      let lineSum = rot.slots[pos].reduce((a, n) => a + (n ? skills.strengthAt(pos, n) : 0), 0);
+      let lineCount = rot.slots[pos].filter(Boolean).length;
 
       byPos[pos].forEach(sIdx => {
         // Re-sorted per slot so the talent term reflects how the line has filled so far.
@@ -311,7 +306,7 @@ export function autoGenerate(
       });
     });
 
-    if (useSkills) repairWeakLines(rot, counts, skills);
+    if (useSkills) repairWeakLines(rot, posIds, counts, skills);
   });
 
   return rotations;

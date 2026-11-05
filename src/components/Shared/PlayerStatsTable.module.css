@@ -61,9 +61,6 @@
   color: var(--neutral-300);
 }
 
-.def { color: var(--blue-400); }
-.mid { color: var(--color-warning); }
-.fwd { color: var(--color-danger); }
 .played { color: var(--neutral-300); }
 .goals { color: var(--color-success); }
 
