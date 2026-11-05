@@ -1,6 +1,9 @@
 import { playersOnField } from '../constants';
 import type { AppState, Player, PositionDef, PositionId, Rotation } from '../types';
-import { availablePlayersForGame, cloneRotation, ensureShape, getGame, shuffleArr } from './utils';
+import { availablePlayersForGame, cloneRotation, ensureShape, getGame, namesOnField, shuffleArr } from './utils';
+import { finishStrong, scorePlan, type RotationPlan } from './strongFinish';
+
+const STRONG_FINISH_ATTEMPTS = 24;
 import { clampLevel, lineWeakCap, SKILL_LOW, SKILL_NEUTRAL } from './skills';
 
 /** Rotations spent at each position id, plus `total` (the key can't clash: ids are generated). */
@@ -15,6 +18,7 @@ type Counts = Record<PositionId, number> & { total: number };
 function buildSkillIndex(players: Player[], positions: PositionDef[]) {
   const byName = new Map(players.map(p => [p.name, p]));
   const skillOf = new Map(positions.map(p => [p.id, p.skill]));
+  const gameSkills = [...new Set(positions.map(p => p.skill))];
 
   const levelAt = (pos: PositionId, name: string | null | undefined): number => {
     if (!name) return 0;
@@ -29,6 +33,17 @@ function buildSkillIndex(players: Player[], positions: PositionDef[]) {
     /** Level for averaging, with unrated counted as neutral so it never skews a line. */
     strengthAt: (pos: PositionId, name: string | null | undefined): number =>
       levelAt(pos, name) || SKILL_NEUTRAL,
+    /**
+     * One number per player for comparing whole rotations: the mean of every skill this
+     * game's positions are rated by (soccer: Defense and Offense; basketball: Overall),
+     * unrated counting as neutral.
+     */
+    overall: (name: string): number => {
+      if (!gameSkills.length) return SKILL_NEUTRAL;
+      const p = byName.get(name);
+      const sum = gameSkills.reduce((a, k) => a + (clampLevel(p?.skills?.[k]) || SKILL_NEUTRAL), 0);
+      return sum / gameSkills.length;
+    },
   };
 }
 
@@ -128,8 +143,9 @@ function findDonor(
  * Avoids benching the same player two rotations in a row when possible.
  *
  * When `settings.useSkillRatings` is on it also spreads talent across the position
- * lines — see the assignment step below. That layer runs strictly after bench selection
- * and so cannot change who plays, only which position they take.
+ * lines, and — with `settings.strongFinish` — puts the strongest group on for the final
+ * rotation while evening out the rest (see finishStrong). Neither changes how many
+ * rotations anyone plays: both run after the playing-time pass and only rearrange it.
  */
 export function autoGenerate(
   state: Pick<AppState, 'players' | 'games' | 'curGame' | 'settings'>,
@@ -166,63 +182,127 @@ export function autoGenerate(
     });
   });
 
-  // Track who was benched in the previous rotation to avoid consecutive bench
-  let prevBench = new Set<string>();
+  // ── Phase 1: who sits each rotation (playing time). ──────────────────────────
+  // Greedy, rotation by rotation: the most-played sit first. Only `.total` is used here.
 
-  rotations.forEach(rot => {
-    if (rot.played) {
-      prevBench = new Set(rot.bench);
-      return;
+  interface Work {
+    lockedNames: Set<string>;
+    openSlots: { pos: PositionId; sIdx: number }[];
+  }
+
+  // Rotations played so far, per player — the starting point for every attempt below.
+  const playedTotals = new Map(available.map(p => [p, counts[p].total]));
+
+  /**
+   * With no `target`, the plain greedy: most-played sit first. With one — each player's
+   * total from an earlier attempt — it sits whoever is furthest ahead of their target
+   * instead, so a re-roll reshuffles WHEN people sit without changing who got the odd
+   * extra rotation. Returns the totals it actually produced.
+   */
+  function planPlayingTime(target?: Map<string, number>) {
+    const totals = new Map(playedTotals);
+    const work: (Work | null)[] = [];
+    const plans: RotationPlan[] = [];
+    let prevBench = new Set<string>();
+
+    rotations.forEach(rot => {
+      if (rot.played) {
+        prevBench = new Set(rot.bench);
+        work.push(null);
+        plans.push({ played: true, locked: new Set(), field: new Set(namesOnField(rot)), bench: new Set(rot.bench) });
+        return;
+      }
+
+      // Collect locked player names
+      const lockedNames = new Set<string>();
+      posIds.forEach(pos => {
+        rot.slots[pos].forEach((p, sIdx) => {
+          if (rot.locked[pos][sIdx] && p) lockedNames.add(p);
+        });
+      });
+
+      // Clear only unlocked slots and bench (idempotent, so safe to repeat per attempt)
+      posIds.forEach(pos => {
+        rot.slots[pos].forEach((_val, sIdx) => {
+          if (!rot.locked[pos][sIdx]) rot.slots[pos][sIdx] = null;
+        });
+      });
+      rot.bench = [];
+
+      // Open slots that need filling
+      const openSlots: { pos: PositionId; sIdx: number }[] = [];
+      posIds.forEach(pos => {
+        rot.slots[pos].forEach((_p, sIdx) => {
+          if (!rot.locked[pos][sIdx]) openSlots.push({ pos, sIdx });
+        });
+      });
+
+      const fieldable = available.filter(p => !lockedNames.has(p));
+      const benchSize = Math.max(0, fieldable.length - openSlots.length);
+
+      // Sort: most-played players bench first.
+      // Tie-break: players who were benched last rotation sort later (bench last) to avoid
+      // consecutive bench. Shuffle first so equal-count ties break randomly — which is
+      // also what decides, at random, who gets an extra rotation when time can't split
+      // evenly.
+      const ahead = (p: string) => totals.get(p)! - (target?.get(p) ?? 0);
+      const sorted = shuffleArr([...fieldable]).sort((a, b) => {
+        const playDiff = ahead(b) - ahead(a);
+        if (playDiff !== 0) return playDiff;
+        // Among equal total plays, push previously-benched players toward the field
+        const aPrev = prevBench.has(a) ? 1 : 0;
+        const bPrev = prevBench.has(b) ? 1 : 0;
+        return aPrev - bPrev;
+      });
+
+      const bench = sorted.slice(0, benchSize);
+      const fieldPlayers = sorted.slice(benchSize);
+      fieldPlayers.forEach(p => { totals.set(p, totals.get(p)! + 1); });
+      prevBench = new Set(bench);
+
+      work.push({ lockedNames, openSlots });
+      plans.push({ played: false, locked: lockedNames, field: new Set(fieldPlayers), bench: new Set(bench) });
+    });
+
+    return { work, plans, totals };
+  }
+
+  // ── Phase 2: when they sit (talent across rotations). ───────────────────────
+  // finishStrong only swaps WHICH rotations a player sits, never how many, so phase 1's
+  // playing time stands exactly. A single greedy schedule can box it in (the no-back-to-
+  // back rule blocks the last trade), so with the setting on, try a few fair schedules
+  // and keep the best result. Each attempt costs well under a millisecond.
+  const strongFinish = useSkills && state.settings.strongFinish;
+  const first = planPlayingTime();
+  let { work, plans } = first;
+  if (strongFinish) {
+    finishStrong(plans, skills.overall);
+    let best = scorePlan(plans, skills.overall);
+    for (let attempt = 1; attempt < STRONG_FINISH_ATTEMPTS; attempt++) {
+      const next = planPlayingTime(first.totals);
+      // Choosing the best of several draws must not tilt who gets extra time toward the
+      // stronger players, so only re-rolls that hit exactly the first draw's totals count.
+      if (available.some(p => next.totals.get(p) !== first.totals.get(p))) continue;
+      finishStrong(next.plans, skills.overall);
+      const score = scorePlan(next.plans, skills.overall);
+      if (score[0] > best[0] || (score[0] === best[0] && score[1] > best[1])) {
+        ({ work, plans } = next);
+        best = score;
+      }
     }
+  }
 
-    // Collect locked player names
-    const lockedNames = new Set<string>();
-    posIds.forEach(pos => {
-      rot.slots[pos].forEach((p, sIdx) => {
-        if (rot.locked[pos][sIdx] && p) lockedNames.add(p);
-      });
-    });
+  // ── Phase 3: positions, rotation by rotation. ───────────────────────────────
+  // Nothing from here on changes who plays, so playing time and the
+  // no-back-to-back-bench rule are unaffected by the skill layer.
 
-    // Clear only unlocked slots and bench
-    posIds.forEach(pos => {
-      rot.slots[pos].forEach((_val, sIdx) => {
-        if (!rot.locked[pos][sIdx]) rot.slots[pos][sIdx] = null;
-      });
-    });
-    rot.bench = [];
-
-    // Open slots that need filling
-    const openSlots: { pos: PositionId; sIdx: number }[] = [];
-    posIds.forEach(pos => {
-      rot.slots[pos].forEach((_p, sIdx) => {
-        if (!rot.locked[pos][sIdx]) openSlots.push({ pos, sIdx });
-      });
-    });
-
-    const fieldable = available.filter(p => !lockedNames.has(p));
-    const benchSize = Math.max(0, fieldable.length - openSlots.length);
-
-    // Sort: most-played players bench first.
-    // Tie-break: players who were benched last rotation sort later (bench last) to avoid
-    // consecutive bench. Shuffle first so equal-count ties break randomly.
-    const sorted = shuffleArr([...fieldable]).sort((a, b) => {
-      const playDiff = counts[b].total - counts[a].total;
-      if (playDiff !== 0) return playDiff;
-      // Among equal total plays, push previously-benched players toward the field
-      const aPrev = prevBench.has(a) ? 1 : 0;
-      const bPrev = prevBench.has(b) ? 1 : 0;
-      return aPrev - bPrev;
-    });
-
-    const bench = sorted.slice(0, benchSize);
-    const fieldPlayers = sorted.slice(benchSize);
-
-    rot.bench = bench;
-    prevBench = new Set(bench);
-
-    // ── Everything below assigns POSITIONS to the players already chosen above.
-    // Nothing from here on reads or writes rot.bench, so playing time and the
-    // no-back-to-back-bench rule are unaffected by the skill layer.
+  rotations.forEach((rot, rIdx) => {
+    const w = work[rIdx];
+    if (!w) return;
+    const { lockedNames, openSlots } = w;
+    const plan = plans[rIdx];
+    const fieldPlayers = [...plan.field];
+    rot.bench = available.filter(p => plan.bench.has(p)); // roster order
 
     // Group open slots by position
     const byPos: Record<string, number[]> = {};
@@ -237,7 +317,6 @@ export function autoGenerate(
     function place(pos: PositionId, sIdx: number, p: string) {
       rot.slots[pos][sIdx] = p;
       counts[p][pos]++;
-      counts[p].total++;
     }
 
     // Mean strength of this rotation's field players, per position's governing skill.

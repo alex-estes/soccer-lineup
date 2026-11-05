@@ -68,10 +68,10 @@ export function mkState(
   players: Player[],
   positions: PositionDef[] = F222,
   useSkillRatings = true,
-  { sport = 'soccer', rotations = 6 }: { sport?: SportId; rotations?: number } = {},
+  { sport = 'soccer', rotations = 6, strongFinish = false }: { sport?: SportId; rotations?: number; strongFinish?: boolean } = {},
 ): AppState {
   const id = 'test-game';
-  const settings = { positions, rotationCount: rotations, useSkillRatings };
+  const settings = { positions, rotationCount: rotations, useSkillRatings, strongFinish };
   return {
     ...makeInitialState(mkTeam(sport), players, settings),
     games: [{

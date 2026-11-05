@@ -57,6 +57,8 @@ export function normalizeSettings(raw: unknown, sport: SportId): TeamSettings {
     positions: normalizePositions(s.positions, sport),
     rotationCount: int(s.rotationCount, defaults.rotationCount, MIN_ROTATIONS, MAX_ROTATIONS),
     useSkillRatings: s.useSkillRatings !== false,
+    // Absent on teams saved before the setting existed: on, like a new team.
+    strongFinish: s.strongFinish !== false,
   };
 }
 

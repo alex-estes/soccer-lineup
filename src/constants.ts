@@ -40,14 +40,14 @@ export const SPORTS: Record<SportId, SportConfig> = {
       { key: 'teamwork', label: 'Teamwork', group: 'soft' },
       { key: 'kindness', label: 'Kindness', group: 'soft' },
     ],
-    defaultSettings: { positions: SOCCER_POSITIONS, rotationCount: 6, useSkillRatings: true },
+    defaultSettings: { positions: SOCCER_POSITIONS, rotationCount: 6, useSkillRatings: true, strongFinish: true },
   },
   basketball: {
     id: 'basketball',
     label: 'Basketball',
     scoreLabel: 'Points',
     skills: [{ key: 'overall', label: 'Overall', group: 'hard' }],
-    defaultSettings: { positions: BASKETBALL_POSITIONS, rotationCount: 8, useSkillRatings: true },
+    defaultSettings: { positions: BASKETBALL_POSITIONS, rotationCount: 8, useSkillRatings: true, strongFinish: true },
   },
 };
 

@@ -228,7 +228,22 @@ export function SettingsPage({ user, onSignOut }: Props) {
                 label="Distribute Players Based on Skill"
               />
             </div>
+            {settings.useSkillRatings && (
+              <div className={styles.row}>
+                <span className={styles.label}>Strongest Lineup in Last Rotation</span>
+                <Toggle
+                  checked={settings.strongFinish}
+                  onChange={enabled => dispatch({ type: 'SET_STRONG_FINISH', enabled })}
+                  label="Strongest Lineup in Last Rotation"
+                />
+              </div>
+            )}
           </div>
+          {settings.useSkillRatings && settings.strongFinish && (
+            <p className={styles.hint}>
+              Everyone still plays the same number of rotations — only when they sit changes.
+            </p>
+          )}
         </section>
 
         <section className={styles.section}>

@@ -19,7 +19,9 @@ describe('normalizeTeamDoc', () => {
       memberNames: { u1: 'Alex', u2: 'Sam' }, joinCode: 'ABCDEFGH',
     });
     expect(t.players).toEqual([{ name: 'Jo', active: true, skills: { overall: 2 } }]);
-    expect(t.settings).toEqual({ positions: HOOPS, rotationCount: 8, useSkillRatings: true });
+    // strongFinish wasn't stored: a team saved before that setting existed gets it on.
+    expect(t.settings).toEqual({ positions: HOOPS, rotationCount: 8, useSkillRatings: true, strongFinish: true });
+    expect(normalizeTeamDoc('t1', { ...raw, settings: { ...raw.settings, strongFinish: false } }).settings.strongFinish).toBe(false);
   });
 
   it('drops duplicate and nameless players instead of letting them collide', () => {
