@@ -18,7 +18,7 @@ export function UpdateBanner() {
         Tap to refresh
       </button>
       <button type="button" className={styles.dismissBtn} onClick={() => setDismissed(true)} aria-label="Dismiss">
-        <IconX size={18} />
+        <IconX size={24} />
       </button>
     </div>
   );

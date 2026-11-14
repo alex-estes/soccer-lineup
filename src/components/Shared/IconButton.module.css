@@ -2,10 +2,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-8);
-  padding: var(--space-8);
-  min-width: var(--tap-min);
-  min-height: var(--tap-min);
+  /* Fixed square, so every icon button matches Button's height whatever icon it holds. */
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
   border-radius: var(--radius-lg);
   background: transparent;
   border: 2px solid transparent;
@@ -14,7 +14,12 @@
   flex-shrink: 0;
 }
 
-.button:hover {
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button:hover:not(:disabled) {
   background: var(--color-bg-surface);
 }
 

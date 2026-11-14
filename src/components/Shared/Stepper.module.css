@@ -5,24 +5,6 @@
   flex-shrink: 0;
 }
 
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--tap-min);
-  height: var(--tap-min);
-  border-radius: var(--radius-lg);
-  border: 2px solid var(--color-brand-primary);
-  background: transparent;
-  color: var(--color-brand-primary);
-  cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .value {
   min-width: 20px;
   text-align: center;

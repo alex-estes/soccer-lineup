@@ -48,7 +48,7 @@
   gap: var(--space-8);
   width: 100%;
   /* As tall as a row holding a stepper or toggle, so text-only rows line up with them. */
-  min-height: calc(var(--tap-min) + 2 * var(--space-8) + 4px);
+  min-height: calc(var(--control-height) + 2 * var(--space-8) + 4px);
   padding: var(--space-8) var(--space-12);
   background: var(--color-bg-surface);
   border: 2px solid var(--color-border-default);
