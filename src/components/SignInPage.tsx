@@ -31,7 +31,7 @@ export function SignInPage({ onSignIn, redirectError }: Props) {
         <div className={styles.logo}>
           <IconBallFootball size={40} />
         </div>
-        <h1 className={styles.title}>Soccer Lineup</h1>
+        <h1 className={styles.title}>Coach Pro</h1>
         <p className={styles.subtitle}>Manage your team's rotations and playing time</p>
         <button className={styles.googleButton} onClick={handleSignIn} disabled={pending}>
           {pending ? (
