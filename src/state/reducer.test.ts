@@ -77,6 +77,21 @@ describe('players', () => {
     expect(next.games[0].scores).toEqual({ A: 1 });
   });
 
+  it('removing or renaming leaves games the player was never in untouched', () => {
+    const state = moveState();
+    const other: AppState['games'][number] = {
+      ...state.games[0],
+      id: 'other',
+      scores: {},
+      excludedPlayers: [],
+      rotations: [{ slots: { def: ['A', 'B'], mid: ['C', null], fwd: ['D'] }, locked: {}, bench: ['F'], played: false }],
+    };
+    state.games.push(other);
+    expect(reducer(state, { type: 'REMOVE_PLAYER', index: 4 }).games[1]).toBe(other); // E
+    expect(reducer(state, { type: 'RENAME_PLAYER', index: 4, newName: 'Eve' }).games[1]).toBe(other);
+    expect(reducer(state, { type: 'REMOVE_PLAYER', index: 0 }).games[1]).not.toBe(other); // A is in it
+  });
+
   it('a new basketball player gets the overall rating only', () => {
     const state = mkState([], HOOPS, true, { sport: 'basketball' });
     const next = reducer(state, { type: 'ADD_PLAYER', name: 'Jo' });
