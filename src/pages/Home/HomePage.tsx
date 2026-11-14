@@ -143,7 +143,13 @@ export function HomePage({ user, onSignOut }: Props) {
           </div>
           <div className={styles.list}>
             {state.players.length === 0 ? (
-              <div className={styles.emptyState}>No players yet</div>
+              <button
+                type="button"
+                className={[styles.emptyState, styles.emptyAction].join(' ')}
+                onClick={() => setPlayerModal({ mode: 'add' })}
+              >
+                Add your first player
+              </button>
             ) : (
               state.players.map((p, i) => (
                 <RosterCard
