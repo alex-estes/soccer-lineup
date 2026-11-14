@@ -29,7 +29,7 @@ type GameModal = { mode: 'add' } | { mode: 'rename'; gameId: string; name: strin
 type PlayerModal = { mode: 'add' } | { mode: 'rename'; index: number; name: string } | null;
 // Players are kept by name, not index, so a roster change from another coach
 // while the dialog is open can't make it delete the wrong player.
-type PendingDelete = { kind: 'game'; gameId: string; name: string } | { kind: 'player'; name: string } | null;
+type PendingDelete = { kind: 'game'; gameId: string; name: string } | { kind: 'player'; name: string; hasHistory: boolean } | null;
 
 export function HomePage({ user, onSignOut }: Props) {
   const { state, dispatch } = useAppState();
@@ -46,8 +46,7 @@ export function HomePage({ user, onSignOut }: Props) {
     const hasHistory = state.games.some(g =>
       g.completed && g.rotations.some(r => namesOnField(r).includes(player.name))
     );
-    if (hasHistory) setPendingDelete({ kind: 'player', name: player.name });
-    else dispatch({ type: 'REMOVE_PLAYER', index });
+    setPendingDelete({ kind: 'player', name: player.name, hasHistory });
   }
 
   function handleConfirmDelete() {
@@ -185,7 +184,7 @@ export function HomePage({ user, onSignOut }: Props) {
         title={pendingDelete?.kind === 'player' ? 'DELETE PLAYER' : 'DELETE GAME'}
         message={
           pendingDelete?.kind === 'player'
-            ? `${pendingDelete.name} has played in completed games. Their stats will be removed. This cannot be undone.`
+            ? `Remove ${pendingDelete.name} from the roster? They'll be taken out of every lineup${pendingDelete.hasHistory ? ', and their stats from completed games will be removed' : ''}. This cannot be undone.`
             : `Delete the game vs. ${pendingDelete?.name ?? ''}? Its lineup and scores will be removed. This cannot be undone.`
         }
         confirmLabel={pendingDelete?.kind === 'player' ? 'Delete Player' : 'Delete Game'}
