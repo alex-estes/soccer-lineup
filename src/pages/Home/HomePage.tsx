@@ -97,7 +97,13 @@ export function HomePage({ user, onSignOut }: Props) {
           </div>
           <div className={styles.list}>
             {state.games.length === 0 ? (
-              <div className={styles.emptyState}>No games yet</div>
+              <button
+                type="button"
+                className={[styles.emptyState, styles.emptyAction].join(' ')}
+                onClick={() => setGameModal({ mode: 'add' })}
+              >
+                Add your first game
+              </button>
             ) : (
               state.games.map(g => (
                 <GameCard

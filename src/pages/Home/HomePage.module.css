@@ -55,7 +55,11 @@
 }
 
 .emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+  min-height: 64px;
   padding: var(--space-12);
   text-align: center;
   color: var(--color-text-disabled);
@@ -64,4 +68,12 @@
   background: var(--color-bg-surface);
   border: 2px solid var(--color-border-default);
   border-radius: var(--radius-lg);
+}
+
+/* An empty state that is itself the call to action: the whole card is the tap target. */
+.emptyAction {
+  color: var(--color-brand-primary);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
 }
