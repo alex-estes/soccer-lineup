@@ -50,7 +50,7 @@
   font-size: var(--font-size-base);
   letter-spacing: var(--tracking-wide);
   color: var(--color-text-primary);
-  text-align: center;
+  text-align: left;
 }
 
 .input {
