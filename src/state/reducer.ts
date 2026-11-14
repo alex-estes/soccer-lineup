@@ -1,6 +1,6 @@
 import { MAX_POSITION_COUNT, MAX_ROTATIONS, MIN_ROTATIONS, positionSkills, SPORTS } from '../constants';
 import { autoGenerate } from '../lib/autoGenerate';
-import { cloneRotation, emptyRotation, emptyRotations, getGame } from '../lib/utils';
+import { cloneRotation, emptyRotation, emptyRotations, getGame, isPlayerNameTaken } from '../lib/utils';
 import { clampLevel, emptySkills, normalizeSkills } from '../lib/skills';
 import type {
   AppState, Rotation, Game, MoveSource, MoveTarget, StatsScope, SkillKey,
@@ -145,7 +145,7 @@ export function reducer(state: AppState, action: Action): AppState {
 
     case 'ADD_PLAYER': {
       const name = action.name.trim();
-      if (!name || state.players.some(p => p.name === name)) return state;
+      if (!name || isPlayerNameTaken(state.players, name)) return state;
       const player: Player = { name, active: true, skills: emptySkills(state.team.sport) };
       return { ...state, players: [...state.players, player] };
     }
@@ -172,7 +172,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'RENAME_PLAYER': {
       const old = state.players[action.index]?.name;
       const n = action.newName.trim();
-      if (!old || !n || n === old || state.players.some(p => p.name === n)) return state;
+      if (!old || !n || n === old || isPlayerNameTaken(state.players, n, action.index)) return state;
       const players = state.players.map((p, i) =>
         i === action.index ? { ...p, name: n } : p
       );

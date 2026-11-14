@@ -67,3 +67,14 @@ export function shuffleArr<T>(arr: T[]): T[] {
   }
   return a;
 }
+
+/**
+ * True if another player already has this name, ignoring case and surrounding
+ * spaces ("jo" and "Jo " clash). Players are keyed by name in rotations and
+ * scores, so two with the same name would collapse into one. `exceptIndex` is
+ * the player being renamed, so changing only the case of your own name is fine.
+ */
+export function isPlayerNameTaken(players: Player[], name: string, exceptIndex?: number): boolean {
+  const key = name.trim().toLowerCase();
+  return players.some((p, i) => i !== exceptIndex && p.name.toLowerCase() === key);
+}

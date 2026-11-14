@@ -70,6 +70,18 @@
   color: var(--color-text-secondary);
 }
 
+.inputError {
+  border-color: var(--color-danger);
+}
+
+.error {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  text-align: left;
+}
+
 .footer {
   display: flex;
   align-items: center;

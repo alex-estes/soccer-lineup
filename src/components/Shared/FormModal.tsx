@@ -14,12 +14,15 @@ interface Props {
   initialValue?: string;
   confirmLabel: string;
   onConfirm: (value: string) => void;
+  /** Returns an error message to show under the input, or null if the value is fine. */
+  validate?: (value: string) => string | null;
 }
 
-export function FormModal({ open, onClose, icon, title, bodyText, placeholder, initialValue, confirmLabel, onConfirm }: Props) {
+export function FormModal({ open, onClose, icon, title, bodyText, placeholder, initialValue, confirmLabel, onConfirm, validate }: Props) {
   // No effect resets `value` on open — callers remount this component (via a
   // `key` that changes per modal purpose) so this initial state is always fresh.
   const [value, setValue] = useState(initialValue ?? '');
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -40,6 +43,8 @@ export function FormModal({ open, onClose, icon, title, bodyText, placeholder, i
   function handleConfirm() {
     const trimmed = value.trim();
     if (!trimmed) return;
+    const problem = validate?.(trimmed) ?? null;
+    if (problem) { setError(problem); return; }
     onConfirm(trimmed);
   }
 
@@ -56,13 +61,16 @@ export function FormModal({ open, onClose, icon, title, bodyText, placeholder, i
         <p className={styles.bodyText}>{bodyText}</p>
         <input
           ref={inputRef}
-          className={styles.input}
+          className={[styles.input, error && styles.inputError].filter(Boolean).join(' ')}
           placeholder={placeholder}
           value={value}
           maxLength={30}
-          onChange={e => setValue(e.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'form-modal-error' : undefined}
+          onChange={e => { setValue(e.target.value); setError(null); }}
           onKeyDown={e => { if (e.key === 'Enter') handleConfirm(); }}
         />
+        {error && <p id="form-modal-error" className={styles.error} role="alert">{error}</p>}
         <div className={styles.footer}>
           <Button variant="secondary" onClick={onClose}>Go Back</Button>
           <Button variant="primary" onClick={handleConfirm}>{confirmLabel}</Button>

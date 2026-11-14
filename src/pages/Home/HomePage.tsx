@@ -6,7 +6,7 @@ import {
 import type { User } from 'firebase/auth';
 import { useAppState } from '../../state/AppContext';
 import { getSeasonRecord, getTeamScore, getGameResult, getCumulativeStats, statsColumns } from '../../lib/stats';
-import { namesOnField } from '../../lib/utils';
+import { isPlayerNameTaken, namesOnField } from '../../lib/utils';
 import { AppHeader } from '../../components/Shared/AppHeader';
 import { StatTile } from '../../components/Shared/StatTile';
 import { GameCard } from '../../components/Shared/GameCard';
@@ -69,6 +69,13 @@ export function HomePage({ user, onSignOut }: Props) {
     if (playerModal?.mode === 'add') dispatch({ type: 'ADD_PLAYER', name });
     else if (playerModal?.mode === 'rename') dispatch({ type: 'RENAME_PLAYER', index: playerModal.index, newName: name });
     setPlayerModal(null);
+  }
+
+  function validatePlayerName(name: string): string | null {
+    const exceptIndex = playerModal?.mode === 'rename' ? playerModal.index : undefined;
+    return isPlayerNameTaken(state.players, name, exceptIndex)
+      ? `There's already a player named "${name}". Use a different name, like adding a last initial.`
+      : null;
   }
 
   return (
@@ -189,6 +196,7 @@ export function HomePage({ user, onSignOut }: Props) {
         initialValue={playerModal?.mode === 'rename' ? playerModal.name : ''}
         confirmLabel={playerModal?.mode === 'rename' ? 'Rename' : 'Add Player'}
         onConfirm={handlePlayerConfirm}
+        validate={validatePlayerName}
       />
 
       <ConfirmDialog

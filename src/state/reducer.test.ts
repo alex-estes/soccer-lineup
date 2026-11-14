@@ -92,6 +92,25 @@ describe('players', () => {
     expect(reducer(state, { type: 'REMOVE_PLAYER', index: 0 }).games[1]).not.toBe(other); // A is in it
   });
 
+  it('won\'t add a name already on the roster, ignoring case and spaces', () => {
+    const state = moveState();
+    expect(reducer(state, { type: 'ADD_PLAYER', name: 'A' })).toBe(state);
+    expect(reducer(state, { type: 'ADD_PLAYER', name: ' a ' })).toBe(state);
+  });
+
+  it('won\'t rename a player onto another player\'s name', () => {
+    const state = moveState();
+    expect(reducer(state, { type: 'RENAME_PLAYER', index: 0, newName: 'B' })).toBe(state);
+    expect(reducer(state, { type: 'RENAME_PLAYER', index: 0, newName: 'b' })).toBe(state);
+  });
+
+  it('lets a player change only the case of their own name', () => {
+    const state = moveState();
+    const next = reducer(state, { type: 'RENAME_PLAYER', index: 0, newName: 'a' });
+    expect(next.players[0].name).toBe('a');
+    expect(next.games[0].rotations[0].slots.def).toEqual(['a', 'B']);
+  });
+
   it('a new basketball player gets the overall rating only', () => {
     const state = mkState([], HOOPS, true, { sport: 'basketball' });
     const next = reducer(state, { type: 'ADD_PLAYER', name: 'Jo' });
