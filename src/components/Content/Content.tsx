@@ -1,21 +1,25 @@
+import { useState } from 'react';
 import { IconRotateClockwise2, IconWand } from '@tabler/icons-react';
 import { RotationList } from './RotationList';
 import { useAppState } from '../../state/AppContext';
 import { autoGenerateAction } from '../../state/reducer';
 import { availablePlayersForGame, getGame } from '../../lib/utils';
 import { IconButton } from '../Shared/IconButton';
+import { NoticeDialog } from '../Shared/NoticeDialog';
 import { playersOnField } from '../../constants';
 import styles from './Content.module.css';
 
 export function Content() {
   const { state, dispatch } = useAppState();
+  const [notice, setNotice] = useState<string | null>(null);
 
   function handleGenerate() {
     const game = getGame(state.games, state.curGame);
     if (!game) return;
     const needed = playersOnField(game.positions);
-    if (availablePlayersForGame(state.players, game).length < needed) {
-      alert(`Need at least ${needed} available players.`);
+    const available = availablePlayersForGame(state.players, game).length;
+    if (available < needed) {
+      setNotice(`This lineup needs ${needed} players on the field, but only ${available} ${available === 1 ? 'is' : 'are'} available for this game.`);
       return;
     }
     dispatch(autoGenerateAction(state));
@@ -31,6 +35,12 @@ export function Content() {
         <IconButton variant="outline" icon={<IconWand size={24} />} title="Generate lineup" onClick={handleGenerate} />
       </div>
       <RotationList />
+      <NoticeDialog
+        open={notice !== null}
+        title="NOT ENOUGH PLAYERS"
+        message={notice ?? ''}
+        onClose={() => setNotice(null)}
+      />
     </section>
   );
 }
