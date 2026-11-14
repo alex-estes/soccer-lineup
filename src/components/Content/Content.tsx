@@ -4,7 +4,7 @@ import { RotationList } from './RotationList';
 import { useAppState } from '../../state/AppContext';
 import { autoGenerateAction } from '../../state/reducer';
 import { availablePlayersForGame, getGame } from '../../lib/utils';
-import { IconButton } from '../Shared/IconButton';
+import { Button } from '../Shared/Button';
 import { NoticeDialog } from '../Shared/NoticeDialog';
 import { playersOnField } from '../../constants';
 import styles from './Content.module.css';
@@ -32,7 +32,9 @@ export function Content() {
           <IconRotateClockwise2 size={24} />
           <span>ROTATIONS</span>
         </div>
-        <IconButton variant="outline" icon={<IconWand size={24} />} title="Generate lineup" onClick={handleGenerate} />
+        <Button variant="secondary" onClick={handleGenerate} title="Generate lineup">
+          <IconWand size={24} /> Generate
+        </Button>
       </div>
       <RotationList />
       <NoticeDialog
