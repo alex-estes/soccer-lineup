@@ -116,6 +116,13 @@ function mapRotationNames(rot: Rotation, fn: (n: string) => string | null): Rota
   return { ...rot, slots, bench };
 }
 
+/** Whether a game refers to `name` anywhere — scores, exclusions or a rotation. */
+function gameMentions(g: Game, name: string): boolean {
+  return name in g.scores
+    || g.excludedPlayers.includes(name)
+    || g.rotations.some(r => r.bench.includes(name) || Object.values(r.slots).some(line => line.includes(name)));
+}
+
 function updateSettings(state: AppState, patch: Partial<TeamSettings>): AppState {
   return { ...state, settings: { ...state.settings, ...patch } };
 }
@@ -147,7 +154,9 @@ export function reducer(state: AppState, action: Action): AppState {
       const name = state.players[action.index]?.name;
       if (!name) return state;
       const players = state.players.filter((_, i) => i !== action.index);
+      // Games the player was never in stay the same object, so sync doesn't re-save them.
       const games = state.games.map(g => {
+        if (!gameMentions(g, name)) return g;
         const scores = { ...g.scores };
         delete scores[name];
         return {
@@ -168,6 +177,7 @@ export function reducer(state: AppState, action: Action): AppState {
         i === action.index ? { ...p, name: n } : p
       );
       const games = state.games.map(g => {
+        if (!gameMentions(g, old)) return g;
         const scores = { ...g.scores };
         if (old in scores) { scores[n] = scores[old]; delete scores[old]; }
         return {
