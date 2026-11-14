@@ -1,5 +1,19 @@
+/* Full screen, so as many players as possible fit without scrolling. */
+.overlay {
+  padding: 0;
+}
+
 .card {
-  max-height: 85vh;
+  max-width: none;
+  height: 100dvh;
+  border: none;
+  border-radius: 0;
+  /* Keep the content a phone-ish width on wide screens. */
+  padding:
+    max(var(--space-12), env(safe-area-inset-top))
+    max(var(--space-16), calc((100vw - 480px) / 2), env(safe-area-inset-right))
+    max(var(--space-12), env(safe-area-inset-bottom))
+    max(var(--space-16), calc((100vw - 480px) / 2), env(safe-area-inset-left));
 }
 
 /* Only the player list scrolls; header, opponent score and footer stay put. */
