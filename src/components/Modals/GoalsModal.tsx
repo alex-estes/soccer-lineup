@@ -31,7 +31,7 @@ export function GoalsModal({ open, onClose }: Props) {
   const allPlayed = game.rotations.length > 0 && game.rotations.every(r => r.played);
 
   return (
-    <div className={formStyles.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className={[formStyles.overlay, styles.overlay].join(' ')} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className={[formStyles.card, styles.card].join(' ')}>
         <div className={formStyles.header}>
           <div className={formStyles.titleGroup}>
