@@ -15,6 +15,7 @@ import { PlayerStatsTable } from '../../components/Shared/PlayerStatsTable';
 import { IconButton } from '../../components/Shared/IconButton';
 import { Chip } from '../../components/Shared/Chip';
 import { FormModal } from '../../components/Shared/FormModal';
+import { ConfirmDialog } from '../../components/Shared/ConfirmDialog';
 import type { SyncStatus } from '../../types';
 import styles from './HomePage.module.css';
 
@@ -26,19 +27,18 @@ interface Props {
 
 type GameModal = { mode: 'add' } | { mode: 'rename'; gameId: string; name: string } | null;
 type PlayerModal = { mode: 'add' } | { mode: 'rename'; index: number; name: string } | null;
+// Players are kept by name, not index, so a roster change from another coach
+// while the dialog is open can't make it delete the wrong player.
+type PendingDelete = { kind: 'game'; gameId: string; name: string } | { kind: 'player'; name: string } | null;
 
 export function HomePage({ user, onSignOut }: Props) {
   const { state, dispatch } = useAppState();
   const [gameModal, setGameModal] = useState<GameModal>(null);
   const [playerModal, setPlayerModal] = useState<PlayerModal>(null);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null);
 
   const record = getSeasonRecord(state);
   const cumulativeStats = getCumulativeStats(state);
-
-  function handleDeleteGame(gameId: string, name: string) {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    dispatch({ type: 'DELETE_GAME', gameId });
-  }
 
   function handleDeletePlayer(index: number) {
     const player = state.players[index];
@@ -46,8 +46,18 @@ export function HomePage({ user, onSignOut }: Props) {
     const hasHistory = state.games.some(g =>
       g.completed && g.rotations.some(r => namesOnField(r).includes(player.name))
     );
-    if (hasHistory && !confirm(`${player.name} has played in completed games. Their stats will be removed. Delete anyway?`)) return;
-    dispatch({ type: 'REMOVE_PLAYER', index });
+    if (hasHistory) setPendingDelete({ kind: 'player', name: player.name });
+    else dispatch({ type: 'REMOVE_PLAYER', index });
+  }
+
+  function handleConfirmDelete() {
+    if (pendingDelete?.kind === 'game') {
+      dispatch({ type: 'DELETE_GAME', gameId: pendingDelete.gameId });
+    } else if (pendingDelete?.kind === 'player') {
+      const index = state.players.findIndex(p => p.name === pendingDelete.name);
+      if (index !== -1) dispatch({ type: 'REMOVE_PLAYER', index });
+    }
+    setPendingDelete(null);
   }
 
   function handleGameConfirm(name: string) {
@@ -97,7 +107,7 @@ export function HomePage({ user, onSignOut }: Props) {
                   result={getGameResult(state, g.id)}
                   teamScore={getTeamScore(state, g.id)}
                   onRename={() => setGameModal({ mode: 'rename', gameId: g.id, name: g.name })}
-                  onDelete={() => handleDeleteGame(g.id, g.name)}
+                  onDelete={() => setPendingDelete({ kind: 'game', gameId: g.id, name: g.name })}
                 />
               ))
             )}
@@ -168,6 +178,19 @@ export function HomePage({ user, onSignOut }: Props) {
         initialValue={playerModal?.mode === 'rename' ? playerModal.name : ''}
         confirmLabel={playerModal?.mode === 'rename' ? 'Rename' : 'Add Player'}
         onConfirm={handlePlayerConfirm}
+      />
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={pendingDelete?.kind === 'player' ? 'DELETE PLAYER' : 'DELETE GAME'}
+        message={
+          pendingDelete?.kind === 'player'
+            ? `${pendingDelete.name} has played in completed games. Their stats will be removed. This cannot be undone.`
+            : `Delete the game vs. ${pendingDelete?.name ?? ''}? Its lineup and scores will be removed. This cannot be undone.`
+        }
+        confirmLabel={pendingDelete?.kind === 'player' ? 'Delete Player' : 'Delete Game'}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDelete(null)}
       />
     </>
   );
