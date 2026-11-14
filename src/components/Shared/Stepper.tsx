@@ -1,4 +1,5 @@
 import { IconMinus, IconPlus } from '@tabler/icons-react';
+import { IconButton } from './IconButton';
 import styles from './Stepper.module.css';
 
 interface Props {
@@ -15,25 +16,21 @@ interface Props {
 export function Stepper({ value, onChange, min = 0, max = Infinity, format, label }: Props) {
   return (
     <div className={styles.stepper}>
-      <button
-        type="button"
-        className={styles.btn}
+      <IconButton
+        variant="outline"
+        icon={<IconMinus size={24} />}
         disabled={value <= min}
         onClick={() => onChange(value - 1)}
         title={label ? `Decrease ${label}` : 'Decrease'}
-      >
-        <IconMinus size={16} />
-      </button>
+      />
       <span className={styles.value}>{format ? format(value) : value}</span>
-      <button
-        type="button"
-        className={styles.btn}
+      <IconButton
+        variant="outline"
+        icon={<IconPlus size={24} />}
         disabled={value >= max}
         onClick={() => onChange(value + 1)}
         title={label ? `Increase ${label}` : 'Increase'}
-      >
-        <IconPlus size={16} />
-      </button>
+      />
     </div>
   );
 }

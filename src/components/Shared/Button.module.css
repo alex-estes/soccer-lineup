@@ -3,8 +3,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-8);
-  min-height: var(--tap-min);
-  padding: var(--space-8) var(--space-12);
+  height: var(--control-height);
+  padding: 0 var(--space-12);
   border-radius: var(--radius-lg);
   font-family: var(--font-sans);
   font-weight: 700;

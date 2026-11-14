@@ -58,7 +58,9 @@
 
   /* touch targets — every interactive control in the design (buttons, icon
      buttons) is built to a 40px minimum via its own padding+content sizing */
-  --tap-min: 40px;
+  /* Height of every button, icon button and stepper button. */
+  --control-height: 42px;
+  --tap-min: var(--control-height);
 
   /* AppHeader's rendered height (12px padding + 40px avatar/icon row + 12px
      padding + 2px border) — used as the sticky `top` offset for the page
