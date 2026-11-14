@@ -10,16 +10,13 @@
   background: var(--color-bg-base);
 }
 
+/* The Lottie canvas is 400×400 with the ball occupying the lower-middle,
+   so the box is larger than the ball itself. Colors are baked into
+   src/assets/ball-loader.json (brand teal #62d5be). */
 .ball {
-  display: flex;
-  align-items: center;
-  color: var(--color-brand-primary);
-  animation: spin 1.2s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  width: 160px;
+  height: 160px;
+  margin-bottom: calc(-1 * var(--space-16));
 }
 
 .text {
