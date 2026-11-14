@@ -12,7 +12,7 @@
   padding:
     max(var(--space-12), env(safe-area-inset-top))
     max(var(--space-16), calc((100vw - 480px) / 2), env(safe-area-inset-right))
-    max(var(--space-12), env(safe-area-inset-bottom))
+    calc(var(--space-12) + max(var(--space-12), env(safe-area-inset-bottom)))
     max(var(--space-16), calc((100vw - 480px) / 2), env(safe-area-inset-left));
 }
 
@@ -25,6 +25,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .row {
