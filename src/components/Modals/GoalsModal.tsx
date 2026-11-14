@@ -4,6 +4,7 @@ import { SPORTS } from '../../constants';
 import { useAppState } from '../../state/AppContext';
 import { getLiveResult } from '../../lib/stats';
 import { getGame } from '../../lib/utils';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { Stepper } from '../Shared/Stepper';
 import { Button } from '../Shared/Button';
 import { IconButton } from '../Shared/IconButton';
@@ -17,6 +18,7 @@ interface Props {
 
 export function GoalsModal({ open, onClose }: Props) {
   const { state, dispatch } = useAppState();
+  useScrollLock(open);
 
   const game = getGame(state.games, state.curGame);
   if (!game || !open) return null;
@@ -68,7 +70,7 @@ export function GoalsModal({ open, onClose }: Props) {
         </div>
 
         <div className={formStyles.footer}>
-          <Button variant="secondary" onClick={onClose}>Done</Button>
+          <Button variant="primary" onClick={onClose}>Done</Button>
           {allPlayed && (
             <Button
               variant={game.completed ? 'primary' : 'secondary'}
