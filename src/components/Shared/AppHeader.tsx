@@ -76,7 +76,7 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
               items={otherTeams.map(t => ({
                 key: t.meta.id,
                 label: t.meta.name,
-                icon: <SportIcon sport={t.meta.sport} />,
+                icon: <SportIcon sport={t.meta.sport} className={styles.teamIcon} />,
                 onClick: () => { switcher?.onSelect(t.meta.id); navigate('/'); },
               }))}
             />

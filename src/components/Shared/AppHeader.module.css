@@ -128,3 +128,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.teamIcon {
+  flex-shrink: 0;
+  color: var(--color-brand-primary);
+}
