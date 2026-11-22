@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from 'firebase/auth';
 import {
@@ -141,7 +141,8 @@ function ModalShell({ title, icon, onClose, children }: {
 
 function useAutoFocus() {
   const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { setTimeout(() => ref.current?.focus(), 50); }, []);
+  // Synchronous so iOS opens the keyboard (see FormModal).
+  useLayoutEffect(() => { ref.current?.focus(); }, []);
   return ref;
 }
 
