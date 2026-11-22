@@ -78,3 +78,58 @@
   justify-content: center;
   color: var(--color-brand-primary);
 }
+
+/* Team name + chevron: opens the team switcher. The whole area is the tap target. */
+.titleButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-8);
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.titleButton .title {
+  padding: 0;
+}
+
+.chevron {
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+/* Positioned against the header (sticky, so it's the containing block): spans the
+   page with 24px each side, capped to the content column on wide screens. */
+.header .teamMenu {
+  left: 24px;
+  right: 24px;
+  width: auto;
+  max-width: 592px;
+  margin: 0 auto;
+}
+
+.header .teamMenu > button {
+  gap: var(--space-8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teamIcon {
+  flex-shrink: 0;
+  color: var(--color-brand-primary);
+}

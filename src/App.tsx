@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState, useCallback } from 'react';
+import { useReducer, useEffect, useState, useCallback, useMemo } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import type { User } from 'firebase/auth';
 import { LoadingOverlay } from './components/LoadingOverlay';
@@ -10,6 +10,7 @@ import { SettingsPage } from './pages/Settings/SettingsPage';
 import { PlayerPage } from './pages/Player/PlayerPage';
 import { TeamsPage } from './pages/Teams/TeamsPage';
 import { AppContext } from './state/AppContext';
+import { TeamSwitcherContext } from './state/TeamSwitcherContext';
 import { reducer, makeInitialState } from './state/reducer';
 import type { TeamSnapshot } from './state/teamDoc';
 import { useTeamSync } from './hooks/useTeamSync';
@@ -87,36 +88,43 @@ function SignedInApp({ user, onSignOut }: { user: User; onSignOut: () => void })
     setSelectedId(id);
   }, []);
 
-  if (loading) return <LoadingOverlay />;
-
   // The remembered team, or else the first one — a team that was deleted, or that this
   // coach was removed from, simply drops out of `teams`.
   const active = teams.find(t => t.meta.id === selectedId) ?? teams[0];
+  const activeId = active?.meta.id ?? null;
+  const switcher = useMemo(
+    () => ({ teams, activeId, onSelect: selectTeam }),
+    [teams, activeId, selectTeam],
+  );
+
+  if (loading) return <LoadingOverlay />;
 
   return (
-    <HashRouter>
-      <Routes>
-        <Route
-          path="/teams"
-          element={
-            <TeamsPage
-              user={user}
-              onSignOut={onSignOut}
-              teams={teams}
-              activeId={active?.meta.id ?? null}
-              loadError={error}
-              onSelect={selectTeam}
-            />
-          }
-        />
-        <Route
-          path="*"
-          element={active
-            ? <TeamApp key={active.meta.id} snapshot={active} user={user} onSignOut={onSignOut} />
-            : <Navigate to="/teams" replace />}
-        />
-      </Routes>
-    </HashRouter>
+    <TeamSwitcherContext.Provider value={switcher}>
+      <HashRouter>
+        <Routes>
+          <Route
+            path="/teams"
+            element={
+              <TeamsPage
+                user={user}
+                onSignOut={onSignOut}
+                teams={teams}
+                activeId={activeId}
+                loadError={error}
+                onSelect={selectTeam}
+              />
+            }
+          />
+          <Route
+            path="*"
+            element={active
+              ? <TeamApp key={active.meta.id} snapshot={active} user={user} onSignOut={onSignOut} />
+              : <Navigate to="/teams" replace />}
+          />
+        </Routes>
+      </HashRouter>
+    </TeamSwitcherContext.Provider>
   );
 }
 
