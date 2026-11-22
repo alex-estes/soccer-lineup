@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { IconX } from '@tabler/icons-react';
 import { IconButton } from './IconButton';
 import { Button } from './Button';
@@ -22,8 +22,11 @@ export function FormModal({ open, onClose, icon, title, bodyText, placeholder, i
   const [value, setValue] = useState(initialValue ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+  // Focus synchronously in the commit triggered by the tap that opened the
+  // modal. iOS only raises the on-screen keyboard when focus() runs inside the
+  // user gesture — deferring it (e.g. setTimeout) focuses without a keyboard.
+  useLayoutEffect(() => {
+    if (open) inputRef.current?.focus();
   }, [open]);
 
   useEffect(() => {
