@@ -99,7 +99,8 @@
 
 .chevron {
   flex-shrink: 0;
-  transition: transform 200ms ease;
+  color: var(--color-text-secondary);
+  transition: transform 350ms ease-in-out;
 }
 
 .chevronOpen {
