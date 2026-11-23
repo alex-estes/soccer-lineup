@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IconFlag, IconDots, IconChevronRight, IconPencil, IconTrash } from '@tabler/icons-react';
 import { Chip } from './Chip';
@@ -17,6 +17,8 @@ interface Props {
 
 export function GameCard({ game, result, teamScore, onRename, onDelete }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Holds the ⋯ button and the menu, so a second tap on ⋯ closes it.
+  const menuWrapRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className={styles.card}>
@@ -29,10 +31,11 @@ export function GameCard({ game, result, teamScore, onRename, onDelete }: Props)
           </Chip>
         )}
       </Link>
-      <div className={styles.menuWrap}>
+      <div ref={menuWrapRef} className={styles.menuWrap}>
         <IconButton icon={<IconDots size={24} />} onClick={() => setMenuOpen(o => !o)} title="Game options" />
         {menuOpen && (
           <DropdownMenu
+            triggerRef={menuWrapRef}
             onClose={() => setMenuOpen(false)}
             items={[
               { label: 'Rename', icon: <IconPencil size={24} />, onClick: onRename },

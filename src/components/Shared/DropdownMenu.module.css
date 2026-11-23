@@ -48,6 +48,8 @@
   color: var(--color-danger);
 }
 
-.mutedIcons .item:not(.danger) > svg {
+/* Icons are grey beside white labels; danger items stay red throughout. A caller can
+   still colour an icon itself (the team switcher's teal sport icons). */
+.item:not(.danger) > svg {
   color: var(--color-text-secondary);
 }

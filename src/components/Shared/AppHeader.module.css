@@ -169,7 +169,7 @@
   text-overflow: ellipsis;
 }
 
-.teamIcon {
+.header .teamMenu .teamIcon {
   flex-shrink: 0;
   color: var(--color-brand-primary);
 }

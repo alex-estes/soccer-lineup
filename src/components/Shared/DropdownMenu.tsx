@@ -20,11 +20,9 @@ interface Props {
    */
   triggerRef?: RefObject<HTMLElement | null>;
   className?: string;
-  /** Grey icons beside the labels (danger items keep their red). */
-  mutedIcons?: boolean;
 }
 
-export function DropdownMenu({ items, onClose, align = 'right', triggerRef, className, mutedIcons }: Props) {
+export function DropdownMenu({ items, onClose, align = 'right', triggerRef, className }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,7 +36,7 @@ export function DropdownMenu({ items, onClose, align = 'right', triggerRef, clas
   }, [onClose, triggerRef]);
 
   return (
-    <div className={[styles.menu, align === 'left' ? styles.alignLeft : '', mutedIcons ? styles.mutedIcons : '', className ?? ''].filter(Boolean).join(' ')} ref={ref}>
+    <div className={[styles.menu, align === 'left' ? styles.alignLeft : '', className ?? ''].filter(Boolean).join(' ')} ref={ref}>
       {items.map(item => (
         <button
           key={item.key ?? item.label}
