@@ -44,6 +44,12 @@
   background: var(--color-bg-base);
 }
 
+.trailing {
+  display: flex;
+  margin-left: auto;
+  padding-left: var(--space-12);
+}
+
 .danger {
   color: var(--color-danger);
 }

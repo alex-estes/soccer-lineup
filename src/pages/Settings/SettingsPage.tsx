@@ -12,6 +12,7 @@ import { Button } from '../../components/Shared/Button';
 import { IconButton } from '../../components/Shared/IconButton';
 import { Chip } from '../../components/Shared/Chip';
 import { Toggle } from '../../components/Shared/Toggle';
+import { Select } from '../../components/Shared/Select';
 import { ConfirmDialog } from '../../components/Shared/ConfirmDialog';
 import { FormModal } from '../../components/Shared/FormModal';
 import { SportIcon } from '../../components/Shared/SportIcon';
@@ -186,18 +187,7 @@ export function SettingsPage({ user, onSignOut }: Props) {
                   />
                 </div>
                 <div className={styles.positionBottom}>
-                  {skillChoices.length > 1 ? (
-                    <label className={styles.skillPick}>
-                      <span>Rated by</span>
-                      <select
-                        className={styles.select}
-                        value={p.skill}
-                        onChange={e => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { skill: e.target.value } })}
-                      >
-                        {skillChoices.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                      </select>
-                    </label>
-                  ) : <span className={styles.hint}>Players</span>}
+                  <span className={styles.hint}>Players</span>
                   <Stepper
                     value={p.count}
                     onChange={count => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { count } })}
@@ -206,6 +196,17 @@ export function SettingsPage({ user, onSignOut }: Props) {
                     label={`${p.name} count`}
                   />
                 </div>
+                {skillChoices.length > 1 && (
+                  <div className={styles.positionBottom}>
+                    <span className={styles.hint}>Rated by</span>
+                    <Select
+                      value={p.skill}
+                      options={skillChoices.map(s => ({ value: s.key, label: s.label }))}
+                      onChange={skill => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { skill } })}
+                      label={`${p.name} rated by`}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
