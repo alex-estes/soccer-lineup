@@ -61,5 +61,5 @@
 
 .chevron {
   flex-shrink: 0;
-  color: var(--color-brand-primary);
+  color: var(--neutral-300);
 }
