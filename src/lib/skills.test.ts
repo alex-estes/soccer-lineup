@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   clampLevel, emptySkills, isLineOverCap, levelOf, lineWeakCap, lineWeakCount,
-  normalizeSkills, skillLetter,
+  normalizeSkills, skillLetter, tierName,
 } from './skills';
 import { emptyRotations } from './utils';
 import { mkPlayers, F222, TWO_WEAK_DEFENDERS } from '../test/fixtures';
@@ -20,15 +20,32 @@ describe('skillLetter', () => {
   });
 });
 
+describe('tierName', () => {
+  it('maps levels to basketball\'s medal tiers', () => {
+    expect([0, 1, 2, 3].map(tierName)).toEqual(['Unrated', 'Bronze', 'Silver', 'Gold']);
+  });
+
+  it('clamps anything out of range', () => {
+    expect(tierName(-1)).toBe('Unrated');
+    expect(tierName(99)).toBe('Gold');
+    expect(tierName(NaN)).toBe('Unrated');
+  });
+});
+
 describe('normalizeSkills', () => {
   it('fills in every key of the sport so the object is always Firestore-safe', () => {
     expect(normalizeSkills(undefined, 'soccer')).toEqual(emptySkills('soccer'));
     expect(normalizeSkills({ defense: 2 }, 'soccer')).toEqual({ ...emptySkills('soccer'), defense: 2 });
   });
 
-  it('gives basketball a single overall rating', () => {
-    expect(emptySkills('basketball')).toEqual({ overall: 0 });
-    expect(normalizeSkills({ overall: 3, defense: 1 }, 'basketball')).toEqual({ overall: 3 });
+  it('gives basketball overall, offense and defense ratings', () => {
+    expect(emptySkills('basketball')).toEqual({ overall: 0, offense: 0, defense: 0 });
+    expect(normalizeSkills({ overall: 3, defense: 1, kindness: 2 }, 'basketball'))
+      .toEqual({ overall: 3, offense: 0, defense: 1 });
+  });
+
+  it('keeps a player rated before offense/defense existed, with the new two unrated', () => {
+    expect(normalizeSkills({ overall: 2 }, 'basketball')).toEqual({ overall: 2, offense: 0, defense: 0 });
   });
 
   it('rejects junk rather than propagating it', () => {

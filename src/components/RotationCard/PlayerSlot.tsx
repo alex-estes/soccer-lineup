@@ -1,7 +1,9 @@
 import { IconLock, IconLockOpen, IconReplace } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { Chip } from '../Shared/Chip';
-import { levelOf, skillLetter } from '../../lib/skills';
+import { levelOf } from '../../lib/skills';
+import { SPORTS } from '../../constants';
+import { SkillRating } from '../Shared/SkillRating';
 import type { PositionId, SkillKey } from '../../types';
 import styles from './PlayerSlot.module.css';
 
@@ -69,7 +71,11 @@ export function PlayerSlot({ rIdx, pos, skill, sIdx, playerName, locked, isPlaye
             <span className={styles.name}>{playerName}</span>
             {state.settings.useSkillRatings && (
               <Chip tone="neutral" size="sm">
-                {skillLetter(levelOf(state.players, playerName, skill))}
+                <SkillRating
+                  level={levelOf(state.players, playerName, skill)}
+                  ratingStyle={SPORTS[state.team.sport].ratingStyle}
+                  size={16}
+                />
               </Chip>
             )}
           </div>

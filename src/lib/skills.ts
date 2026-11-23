@@ -15,6 +15,13 @@ export function skillLetter(level: number): string {
   return LETTERS[Math.min(SKILL_MAX, Math.max(SKILL_MIN, Math.trunc(level || 0)))];
 }
 
+const TIERS = ['Unrated', 'Bronze', 'Silver', 'Gold'] as const;
+
+/** Basketball's name for a level — also the accessible label for its medal. */
+export function tierName(level: number): string {
+  return TIERS[Math.min(SKILL_MAX, Math.max(SKILL_MIN, Math.trunc(level || 0)))];
+}
+
 export function emptySkills(sport: SportId): PlayerSkills {
   const out: PlayerSkills = {};
   SPORTS[sport].skills.forEach(s => { out[s.key] = 0; });

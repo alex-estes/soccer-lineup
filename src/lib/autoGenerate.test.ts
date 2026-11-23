@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { autoGenerate } from './autoGenerate';
 import {
-  F222, F311, HOOPS, NAMES, TWO_WEAK_DEFENDERS,
+  F222, F311, HOOPS, HOOPS_OVERALL, NAMES, TWO_WEAK_DEFENDERS,
   fieldNames, longestBenchRun, mkHoopsPlayers, mkPlayers, mkState, playingTimeSpread, seededRandom,
   soccerLineup, weakCountIn,
 } from '../test/fixtures';
@@ -210,11 +210,11 @@ describe('editable positions and rotation counts', () => {
     expect(worstBenchRun).toBe(1);
   });
 
-  it('applies the weak cap through the single overall rating', () => {
+  it('applies the weak cap through the overall rating when positions are rated by it', () => {
     const overall = { Alex: 1, Taylor: 1, Morgan: 1, Casey: 3, Riley: 2, Jamie: 3, Henry: 2, Lucy: 2, Jordan: 3 };
     let violations = 0;
     for (let i = 0; i < RUNS; i++) {
-      const state = mkState(mkHoopsPlayers(NAMES, overall), HOOPS, true, { sport: 'basketball', rotations: 8 });
+      const state = mkState(mkHoopsPlayers(NAMES, overall), HOOPS_OVERALL, true, { sport: 'basketball', rotations: 8 });
       autoGenerate(state).forEach(r => {
         if (weakCountIn(r, 'guard', overall) > 1) violations++;
         if (weakCountIn(r, 'forward', overall) > 1) violations++;

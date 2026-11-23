@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { IconMinus, IconPlus } from '@tabler/icons-react';
 import { IconButton } from './IconButton';
 import styles from './Stepper.module.css';
@@ -8,7 +9,7 @@ interface Props {
   min?: number;
   max?: number;
   /** Renders the display label for `value`. Defaults to the number itself. */
-  format?: (value: number) => string;
+  format?: (value: number) => ReactNode;
   /** What is being stepped — used for the buttons' accessible titles. */
   label?: string;
 }

@@ -92,10 +92,10 @@ describe('players', () => {
     expect(reducer(state, { type: 'REMOVE_PLAYER', index: 0 }).games[1]).not.toBe(other); // A is in it
   });
 
-  it('a new basketball player gets the overall rating only', () => {
+  it('a new basketball player starts unrated on overall, offense and defense', () => {
     const state = mkState([], HOOPS, true, { sport: 'basketball' });
     const next = reducer(state, { type: 'ADD_PLAYER', name: 'Jo' });
-    expect(next.players[0].skills).toEqual({ overall: 0 });
+    expect(next.players[0].skills).toEqual({ overall: 0, offense: 0, defense: 0 });
   });
 
   it('sets the overall rating', () => {

@@ -6,8 +6,9 @@ import {
 } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { getCumulativeStats, getGamesPlayed, statCell, statsColumns } from '../../lib/stats';
-import { normalizeSkills, skillLetter, SKILL_MAX, SKILL_MIN } from '../../lib/skills';
-import { positionColor, SPORTS, type SkillDef } from '../../constants';
+import { normalizeSkills, SKILL_MAX, SKILL_MIN } from '../../lib/skills';
+import { positionColor, SPORTS, type RatingStyle, type SkillDef } from '../../constants';
+import { SkillRating } from '../../components/Shared/SkillRating';
 import { DetailHeader } from '../../components/Shared/DetailHeader';
 import { StatTile } from '../../components/Shared/StatTile';
 import { Stepper } from '../../components/Shared/Stepper';
@@ -26,10 +27,11 @@ interface SkillRowProps {
   icon: ReactNode;
   label: string;
   level: number;
+  ratingStyle: RatingStyle;
   onChange: (level: number) => void;
 }
 
-function SkillRow({ icon, label, level, onChange }: SkillRowProps) {
+function SkillRow({ icon, label, level, ratingStyle, onChange }: SkillRowProps) {
   return (
     <div className={styles.skillRow}>
       <span className={styles.skillLabel}>{icon}{label}</span>
@@ -38,7 +40,7 @@ function SkillRow({ icon, label, level, onChange }: SkillRowProps) {
         onChange={onChange}
         min={SKILL_MIN}
         max={SKILL_MAX}
-        format={skillLetter}
+        format={v => <SkillRating level={v} ratingStyle={ratingStyle} />}
         label={label}
       />
     </div>
@@ -82,6 +84,7 @@ export function PlayerPage() {
       icon={SKILL_ICONS[s.key] ?? <IconStar size={24} />}
       label={s.label}
       level={skills[s.key] ?? 0}
+      ratingStyle={sport.ratingStyle}
       onChange={setSkill(s.key)}
     />
   );

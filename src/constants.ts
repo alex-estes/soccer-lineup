@@ -1,9 +1,31 @@
-import type { PositionDef, SkillKey, SportId, TeamSettings } from './types';
+import type { PositionDef, SkillKey, SkillLevel, SportId, TeamSettings } from './types';
 
 export interface SkillDef {
   key: SkillKey;
   label: string;
+  /** Three-letter tag used where space is tight (the roster cards). */
+  abbr: string;
   group: 'hard' | 'soft';
+}
+
+/** How a rating level is drawn: soccer's C/B/A letters or basketball's medals. */
+export type RatingStyle = 'letter' | 'medal';
+
+/**
+ * Rules about the whole group on the floor in a rotation, on top of the per-position
+ * weak cap. Basketball has them: five players share every job, so the group matters more
+ * than who stands where. All are best effort — the generator never breaks playing time
+ * or the no-back-to-back-bench rule to satisfy them.
+ */
+export interface LineupRules {
+  /** Rated → this skill alone is a player's strength for the strong finish and the cap below. */
+  strengthSkill: SkillKey;
+  /** Most players at the lowest level (by strength) on the floor at once. */
+  maxWeakOnFloor: number;
+  /** Someone on the floor must be at least `minLevel` here. Unrated counts as the middle level. */
+  handler: { skill: SkillKey; minLevel: SkillLevel };
+  /** Rotation totals of these skills are kept even across the game, as well as strength. */
+  balance: SkillKey[];
 }
 
 export interface SportConfig {
@@ -11,7 +33,9 @@ export interface SportConfig {
   label: string;
   /** What a player's score is called: "Goals" / "Points". */
   scoreLabel: string;
+  ratingStyle: RatingStyle;
   skills: SkillDef[];
+  lineupRules?: LineupRules;
   defaultSettings: TeamSettings;
 }
 
@@ -23,10 +47,12 @@ const SOCCER_POSITIONS: PositionDef[] = [
   { id: 'fwd', name: 'Forwards', count: 2, skill: 'offense' },
 ];
 
+// Guards bring the ball up and run the offense; the center rebounds and protects the
+// rim; forwards do a bit of everything. Only new teams get these — each team keeps its own.
 const BASKETBALL_POSITIONS: PositionDef[] = [
-  { id: 'guard', name: 'Guards', count: 2, skill: 'overall' },
+  { id: 'guard', name: 'Guards', count: 2, skill: 'offense' },
   { id: 'forward', name: 'Forwards', count: 2, skill: 'overall' },
-  { id: 'center', name: 'Center', count: 1, skill: 'overall' },
+  { id: 'center', name: 'Center', count: 1, skill: 'defense' },
 ];
 
 export const SPORTS: Record<SportId, SportConfig> = {
@@ -34,11 +60,12 @@ export const SPORTS: Record<SportId, SportConfig> = {
     id: 'soccer',
     label: 'Soccer',
     scoreLabel: 'Goals',
+    ratingStyle: 'letter',
     skills: [
-      { key: 'defense', label: 'Defense', group: 'hard' },
-      { key: 'offense', label: 'Offense', group: 'hard' },
-      { key: 'teamwork', label: 'Teamwork', group: 'soft' },
-      { key: 'kindness', label: 'Kindness', group: 'soft' },
+      { key: 'defense', label: 'Defense', abbr: 'DEF', group: 'hard' },
+      { key: 'offense', label: 'Offense', abbr: 'OFF', group: 'hard' },
+      { key: 'teamwork', label: 'Teamwork', abbr: 'TMW', group: 'soft' },
+      { key: 'kindness', label: 'Kindness', abbr: 'KND', group: 'soft' },
     ],
     defaultSettings: { positions: SOCCER_POSITIONS, rotationCount: 6, useSkillRatings: true, strongFinish: true },
   },
@@ -46,7 +73,23 @@ export const SPORTS: Record<SportId, SportConfig> = {
     id: 'basketball',
     label: 'Basketball',
     scoreLabel: 'Points',
-    skills: [{ key: 'overall', label: 'Overall', group: 'hard' }],
+    ratingStyle: 'medal',
+    // Overall stays first: it is what every default position is rated by, and existing
+    // players' Overall ratings carry over unchanged (1/2/3 → Bronze/Silver/Gold).
+    skills: [
+      { key: 'overall', label: 'Overall', abbr: 'OVR', group: 'hard' },
+      { key: 'offense', label: 'Offense', abbr: 'OFF', group: 'hard' },
+      { key: 'defense', label: 'Defense', abbr: 'DEF', group: 'hard' },
+    ],
+    lineupRules: {
+      strengthSkill: 'overall',
+      // Never more than two Bronze of five: a developing player always has stronger
+      // teammates around them.
+      maxWeakOnFloor: 2,
+      // Always someone who can bring the ball up.
+      handler: { skill: 'offense', minLevel: 2 },
+      balance: ['offense', 'defense'],
+    },
     defaultSettings: { positions: BASKETBALL_POSITIONS, rotationCount: 8, useSkillRatings: true, strongFinish: true },
   },
 };

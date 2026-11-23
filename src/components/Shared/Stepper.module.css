@@ -6,8 +6,10 @@
 }
 
 .value {
-  min-width: 20px;
-  text-align: center;
+  min-width: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-sans);
   font-weight: 700;
   font-size: var(--font-size-base);

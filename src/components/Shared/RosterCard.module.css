@@ -63,3 +63,44 @@
   flex-shrink: 0;
   color: var(--neutral-300);
 }
+
+/* Hard-skill ratings, e.g. OVR 🏅 OFF 🏅 DEF 🏅 — stacked tag over value to stay narrow. */
+.ratings {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-8);
+}
+
+.ratings.inactive {
+  opacity: 0.5;
+}
+
+.rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 28px;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  line-height: 18px;
+  color: var(--color-text-primary);
+}
+
+.ratingLabel {
+  font-weight: 800;
+  font-size: 10px;
+  line-height: 12px;
+  letter-spacing: var(--tracking-wide);
+  color: var(--neutral-300);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
