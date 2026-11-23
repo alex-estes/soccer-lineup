@@ -41,6 +41,12 @@ export interface TeamSettings {
   useSkillRatings: boolean;
   /** Strongest available group plays the final rotation (needs useSkillRatings). */
   strongFinish: boolean;
+  /**
+   * The sport's lineup rules (basketball: ball handler, Bronze limit, offense/defense
+   * balance, Overall-first strong finish). Needs useSkillRatings; ignored by a sport
+   * without rules.
+   */
+  lineupRules: boolean;
 }
 
 export interface Game {

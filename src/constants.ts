@@ -72,7 +72,7 @@ export const SPORTS: Record<SportId, SportConfig> = {
       { key: 'teamwork', label: 'Teamwork', abbr: 'TMW', group: 'soft' },
       { key: 'kindness', label: 'Kindness', abbr: 'KND', group: 'soft' },
     ],
-    defaultSettings: { positions: SOCCER_POSITIONS, rotationCount: 6, useSkillRatings: true, strongFinish: true },
+    defaultSettings: { positions: SOCCER_POSITIONS, rotationCount: 6, useSkillRatings: true, strongFinish: true, lineupRules: true },
   },
   basketball: {
     id: 'basketball',
@@ -96,7 +96,7 @@ export const SPORTS: Record<SportId, SportConfig> = {
       handler: { skill: 'offense', minLevel: 2 },
       balance: ['offense', 'defense'],
     },
-    defaultSettings: { positions: BASKETBALL_POSITIONS, rotationCount: 8, useSkillRatings: true, strongFinish: true },
+    defaultSettings: { positions: BASKETBALL_POSITIONS, rotationCount: 8, useSkillRatings: true, strongFinish: true, lineupRules: true },
   },
 };
 

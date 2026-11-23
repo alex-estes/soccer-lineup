@@ -226,4 +226,23 @@ describe('basketball floor rules', SLOW, () => {
     // finish would land well under the overall average of 10.
     expect(total / RUNS).toBeGreaterThan(11.5);
   });
+  it('enforces none of it with the setting off, but keeps the rest of the skill layer', () => {
+    // Same roster as the Bronze and ball-handler tests, rules off: both turn up again.
+    const offense: Ratings = Object.fromEntries(NAMES.map(n => [n, 1]));
+    offense.Henry = 3; offense.Casey = 2; offense.Morgan = 2;
+    let overBronze = 0, missingHandler = 0;
+    for (let i = 0; i < RUNS; i++) {
+      const state = mkState(mkHoopsPlayers(NAMES, TIERS, offense), HOOPS, true,
+        { sport: 'basketball', rotations: 8, strongFinish: true, lineupRules: false });
+      const rots = autoGenerate(state);
+      expect(playingTimeSpread(rots, NAMES)).toBe(1);
+      expect(longestBenchRun(rots)).toBe(1);
+      rots.forEach(r => {
+        if (bronzeOnFloor(r, TIERS) > 2) overBronze++;
+        if (!fieldNames(r).some(n => offense[n] >= 2)) missingHandler++;
+      });
+    }
+    expect(overBronze).toBeGreaterThan(0);
+    expect(missingHandler).toBeGreaterThan(0);
+  });
 });

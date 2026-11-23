@@ -98,6 +98,15 @@ describe('players', () => {
     expect(next.players[0].skills).toEqual({ overall: 0, offense: 0, defense: 0 });
   });
 
+  it('turns the lineup rules setting on and off', () => {
+    const state = mkState(mkHoopsPlayers(['Jo']), HOOPS, true, { sport: 'basketball' });
+    expect(state.settings.lineupRules).toBe(true);
+    const off = reducer(state, { type: 'SET_LINEUP_RULES', enabled: false });
+    expect(off.settings.lineupRules).toBe(false);
+    expect(off.settings.strongFinish).toBe(state.settings.strongFinish);
+    expect(reducer(off, { type: 'SET_LINEUP_RULES', enabled: true }).settings.lineupRules).toBe(true);
+  });
+
   it('sets the overall rating', () => {
     const state = mkState(mkHoopsPlayers(['Jo']), HOOPS, true, { sport: 'basketball' });
     const next = reducer(state, { type: 'SET_PLAYER_SKILL', name: 'Jo', skill: 'overall', level: 3 });
