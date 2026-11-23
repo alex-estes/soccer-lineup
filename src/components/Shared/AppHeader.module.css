@@ -1,5 +1,6 @@
 .header {
   display: flex;
+  height: var(--header-height);
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
