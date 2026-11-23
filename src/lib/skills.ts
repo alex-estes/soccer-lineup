@@ -22,6 +22,13 @@ export function tierName(level: number): string {
   return TIERS[Math.min(SKILL_MAX, Math.max(SKILL_MIN, Math.trunc(level || 0)))];
 }
 
+const TIER_COLORS = ['', 'var(--tier-bronze)', 'var(--tier-silver)', 'var(--tier-gold)'];
+
+/** A basketball level's medal colour (a CSS value); empty for unrated. */
+export function tierColor(level: number): string {
+  return TIER_COLORS[Math.min(SKILL_MAX, Math.max(SKILL_MIN, Math.trunc(level || 0)))];
+}
+
 export function emptySkills(sport: SportId): PlayerSkills {
   const out: PlayerSkills = {};
   SPORTS[sport].skills.forEach(s => { out[s.key] = 0; });

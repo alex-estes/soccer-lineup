@@ -1,9 +1,7 @@
 import { IconAwardFilled } from '@tabler/icons-react';
 import type { RatingStyle } from '../../constants';
-import { clampLevel, skillLetter, tierName } from '../../lib/skills';
+import { clampLevel, skillLetter, tierColor, tierName } from '../../lib/skills';
 import styles from './SkillRating.module.css';
-
-const TIER_COLORS = ['', 'var(--tier-bronze)', 'var(--tier-silver)', 'var(--tier-gold)'];
 
 interface Props {
   level: number;
@@ -20,7 +18,7 @@ export function SkillRating({ level, ratingStyle, size = 24 }: Props) {
   }
   return (
     <span className={styles.medal} role="img" aria-label={tierName(l)} title={tierName(l)}>
-      <IconAwardFilled size={size} style={{ color: TIER_COLORS[l] }} aria-hidden />
+      <IconAwardFilled size={size} style={{ color: tierColor(l) }} aria-hidden />
     </span>
   );
 }

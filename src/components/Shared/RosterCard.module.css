@@ -30,7 +30,8 @@
 }
 
 .name {
-  flex: 1 0 0;
+  /* Shrinks to its text, so a medal sits right after it; the link fills the row. */
+  flex: 0 1 auto;
   min-width: 0;
   font-family: var(--font-sans);
   font-weight: 700;
@@ -64,10 +65,23 @@
   color: var(--neutral-300);
 }
 
-/* Hard-skill ratings, e.g. OVR 🏅 OFF 🏅 DEF 🏅 — stacked tag over value to stay narrow. */
+/* Basketball: one medal in the Overall tier's colour, right after the name. */
+.medal {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.medal.inactive {
+  opacity: 0.5;
+}
+
+/* Soccer's hard-skill ratings, e.g. DEF B OFF A — stacked tag over value to stay narrow,
+   pushed to the right edge now the name no longer fills the row. */
 .ratings {
   display: flex;
   flex-shrink: 0;
+  margin-left: auto;
   gap: var(--space-8);
 }
 
