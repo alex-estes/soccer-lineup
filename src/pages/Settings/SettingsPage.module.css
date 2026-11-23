@@ -114,7 +114,7 @@
 .positionCard {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-12);
   width: 100%;
   padding: var(--space-8) var(--space-12);
   background: var(--color-bg-surface);
