@@ -182,7 +182,9 @@ describe('talent-aware tiebreak', () => {
   });
 });
 
-describe('editable positions and rotation counts', () => {
+// Basketball runs here try up to 24 schedules per generate (floor rules), so on CI's
+// slower runners a 400-run test can run past Vitest's 5s default.
+describe('editable positions and rotation counts', { timeout: 30_000 }, () => {
   it('fills every rotation of a basketball game, five on court', () => {
     const state = mkState(mkHoopsPlayers(NAMES), HOOPS, true, { sport: 'basketball', rotations: 8 });
     const rots = autoGenerate(state);
