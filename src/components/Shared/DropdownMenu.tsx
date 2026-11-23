@@ -35,19 +35,30 @@ export function DropdownMenu({ items, onClose, align = 'right', triggerRef, clas
     return () => document.removeEventListener('click', handleClick, true);
   }, [onClose, triggerRef]);
 
+  // Destructive actions always sit at the bottom, set apart by a divider when
+  // there are other actions above them.
+  const safe = items.filter(i => !i.danger);
+  const danger = items.filter(i => i.danger);
+
+  function renderItem(item: DropdownItem) {
+    return (
+      <button
+        key={item.key ?? item.label}
+        type="button"
+        className={[styles.item, item.danger ? styles.danger : ''].filter(Boolean).join(' ')}
+        onClick={() => { item.onClick(); onClose(); }}
+      >
+        {item.icon}
+        {item.label}
+      </button>
+    );
+  }
+
   return (
     <div className={[styles.menu, align === 'left' ? styles.alignLeft : '', className ?? ''].filter(Boolean).join(' ')} ref={ref}>
-      {items.map(item => (
-        <button
-          key={item.key ?? item.label}
-          type="button"
-          className={[styles.item, item.danger ? styles.danger : ''].filter(Boolean).join(' ')}
-          onClick={() => { item.onClick(); onClose(); }}
-        >
-          {item.icon}
-          {item.label}
-        </button>
-      ))}
+      {safe.map(renderItem)}
+      {safe.length > 0 && danger.length > 0 && <hr className={styles.divider} />}
+      {danger.map(renderItem)}
     </div>
   );
 }
