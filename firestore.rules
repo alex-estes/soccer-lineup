@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Deploy with:  npx firebase-tools deploy --only firestore:rules --project soccer-lineup-f253e
+// Deploy with:  npx firebase-tools deploy --only firestore:rules,firestore:indexes --project soccer-lineup-f253e
 // (or paste into Firebase console → Firestore → Rules). Tested by `npm run test:rules`.
 
 service cloud.firestore {
@@ -9,6 +9,10 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function me() { return request.auth.uid; }
     function teamPath(teamId) { return /databases/$(database)/documents/teams/$(teamId); }
+
+    // The app owner, for the read-only admin page. Must match ADMIN_UID in src/lib/admin.ts.
+    // A uid only identifies an account — it is not a secret.
+    function isAdmin() { return signedIn() && me() == 'DP2b237SQCQWPBMstuNAouiEzzJ2'; }
 
     // ── Pre-teams data (schema v1–v3): each coach's own single lineup document. ──
     // Still readable so the app can migrate it into a team, and writable so it can be
@@ -26,7 +30,8 @@ service cloud.firestore {
       function newMembers() { return request.resource.data.memberUids.toSet(); }
 
       // Members only. The app's "my teams" query filters on memberUids, which this allows.
-      allow read: if signedIn() && isMember();
+      // The admin may read (and list) every team, but gets no extra write access.
+      allow read: if signedIn() && (isMember() || isAdmin());
 
       // You can only create a team you own and are the sole member of.
       allow create: if signedIn()
@@ -71,6 +76,13 @@ service cloud.firestore {
           && existsAfter(teamPath(teamId))
           && me() in getAfter(teamPath(teamId)).data.memberUids;
       }
+    }
+
+    // ── Every team's games at once (a collection-group query): admin only, read-only.
+    // Members' own access goes through teams/{teamId}/games above, which a collection-group
+    // query never matches.
+    match /{path=**}/games/{gameId} {
+      allow read: if isAdmin();
     }
 
     // ── Join codes: code → teamId. ──
