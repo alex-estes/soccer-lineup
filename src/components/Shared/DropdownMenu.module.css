@@ -55,8 +55,9 @@
 }
 
 .divider {
-  width: 100%;
-  margin: 0;
+  /* Inset to line up with the items' text padding. */
+  align-self: stretch;
+  margin: 0 var(--space-12);
   border: none;
   border-top: 2px solid var(--color-border-default);
 }
