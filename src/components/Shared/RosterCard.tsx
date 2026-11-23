@@ -18,10 +18,15 @@ export function RosterCard({ player, onRename, onDelete, onToggleActive }: Props
   // Holds the ⋯ button and the menu, so a second tap on ⋯ closes it.
   const menuWrapRef = useRef<HTMLDivElement>(null);
 
+  const playerPath = `/player/${encodeURIComponent(player.name)}`;
+
   return (
     <div className={styles.card}>
-      <IconUser size={24} className={[styles.icon, player.active ? '' : styles.inactive].join(' ')} />
-      <span className={[styles.name, player.active ? '' : styles.inactive].join(' ')}>{player.name}</span>
+      {/* Like GameCard: the icon and name open the player too, not just the chevron. */}
+      <Link to={playerPath} className={styles.link}>
+        <IconUser size={24} className={[styles.icon, player.active ? '' : styles.inactive].join(' ')} />
+        <span className={[styles.name, player.active ? '' : styles.inactive].join(' ')}>{player.name}</span>
+      </Link>
       <div ref={menuWrapRef} className={styles.menuWrap}>
         <IconButton icon={<IconDots size={24} />} onClick={() => setMenuOpen(o => !o)} title="Player options" />
         {menuOpen && (
@@ -41,7 +46,7 @@ export function RosterCard({ player, onRename, onDelete, onToggleActive }: Props
         )}
       </div>
       <Link
-        to={`/player/${encodeURIComponent(player.name)}`}
+        to={playerPath}
         className={styles.chevronLink}
         aria-label={`View ${player.name}`}
       >
