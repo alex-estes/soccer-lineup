@@ -32,8 +32,10 @@ export function soccerLineup(def: number, mid: number, fwd: number): PositionDef
 
 export const F222 = soccerLineup(2, 2, 2);
 export const F311 = soccerLineup(3, 1, 1);
-/** Basketball's default: Guards 2 / Forwards 2 / Center 1, all rated by "overall". */
+/** Basketball's default: Guards 2 (offense) / Forwards 2 (overall) / Center 1 (defense). */
 export const HOOPS = SPORTS.basketball.defaultSettings.positions;
+/** The same lines all rated by Overall — how basketball teams were set up before offense/defense. */
+export const HOOPS_OVERALL: PositionDef[] = HOOPS.map(p => ({ ...p, skill: 'overall' }));
 
 export function mkTeam(sport: SportId = 'soccer'): TeamMeta {
   return {
@@ -55,12 +57,16 @@ export function mkPlayers(names: string[] = NAMES, defense: Ratings = {}, offens
   }));
 }
 
-/** Basketball players with a single overall rating. */
-export function mkHoopsPlayers(names: string[] = NAMES, overall: Ratings = {}): Player[] {
+/** Basketball players; any rating omitted is unrated (0). */
+export function mkHoopsPlayers(
+  names: string[] = NAMES, overall: Ratings = {}, offense: Ratings = {}, defense: Ratings = {},
+): Player[] {
   return names.map(name => ({
     name,
     active: true,
-    skills: normalizeSkills({ overall: overall[name] ?? 0 }, 'basketball'),
+    skills: normalizeSkills(
+      { overall: overall[name] ?? 0, offense: offense[name] ?? 0, defense: defense[name] ?? 0 }, 'basketball',
+    ),
   }));
 }
 

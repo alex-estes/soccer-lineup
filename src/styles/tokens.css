@@ -33,6 +33,11 @@
   --neutral-700: #283039;
   --blue-400: #63a6e9;
 
+  /* rating tiers (basketball's Bronze / Silver / Gold) — not from Figma */
+  --tier-bronze: #d08a57;
+  --tier-silver: #c3ccd5;
+  --tier-gold: #f2c14e;
+
   /* spacing */
   --space-0: 0px;
   --space-2: 2px;

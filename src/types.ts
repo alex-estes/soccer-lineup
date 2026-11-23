@@ -3,7 +3,7 @@ export type SportId = 'soccer' | 'basketball';
 /** Stable id of a position within a team (soccer's originals are 'def' | 'mid' | 'fwd'). */
 export type PositionId = string;
 
-/** 0 = unrated (shown as "–"), 1 = C, 2 = B, 3 = A. Numeric so the Stepper works as-is. */
+/** 0 = unrated (shown as "–"), 1 = C / Bronze, 2 = B / Silver, 3 = A / Gold. Numeric so the Stepper works as-is. */
 export type SkillLevel = 0 | 1 | 2 | 3;
 /** A skill key from the team's sport (see SPORTS[sport].skills). */
 export type SkillKey = string;

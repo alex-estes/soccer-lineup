@@ -155,6 +155,8 @@ export function HomePage({ user, onSignOut }: Props) {
                 <RosterCard
                   key={p.name}
                   player={p}
+                  sport={state.team.sport}
+                  showRatings={state.settings.useSkillRatings}
                   onRename={() => setPlayerModal({ mode: 'rename', index: i, name: p.name })}
                   onDelete={() => handleDeletePlayer(i)}
                   onToggleActive={() => dispatch({ type: 'TOGGLE_ACTIVE', index: i })}

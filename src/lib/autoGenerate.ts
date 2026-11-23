@@ -1,10 +1,12 @@
-import { playersOnField } from '../constants';
-import type { AppState, Player, PositionDef, PositionId, Rotation } from '../types';
+import { playersOnField, SPORTS, type LineupRules } from '../constants';
+import type { AppState, Player, PositionDef, PositionId, Rotation, SportId } from '../types';
 import { availablePlayersForGame, cloneRotation, ensureShape, getGame, namesOnField, shuffleArr } from './utils';
-import { finishStrong, scorePlan, type RotationPlan } from './strongFinish';
+import {
+  betterScore, finishStrong, scorePlan, type ArrangeOptions, type RotationPlan,
+} from './strongFinish';
+import { lineWeakCap, playerLevel, SKILL_LOW, SKILL_NEUTRAL } from './skills';
 
 const STRONG_FINISH_ATTEMPTS = 24;
-import { clampLevel, lineWeakCap, SKILL_LOW, SKILL_NEUTRAL } from './skills';
 
 /** Rotations spent at each position id, plus `total` (the key can't clash: ids are generated). */
 type Counts = Record<PositionId, number> & { total: number };
@@ -15,7 +17,7 @@ type Counts = Record<PositionId, number> & { total: number };
  * still rated correctly. A name on no roster at all — a deleted player still referenced
  * by a locked slot — reads as unrated, which never blocks anything.
  */
-function buildSkillIndex(players: Player[], positions: PositionDef[]) {
+function buildSkillIndex(players: Player[], positions: PositionDef[], sport: SportId, rules?: LineupRules) {
   const byName = new Map(players.map(p => [p.name, p]));
   const skillOf = new Map(positions.map(p => [p.id, p.skill]));
   const gameSkills = [...new Set(positions.map(p => p.skill))];
@@ -23,10 +25,15 @@ function buildSkillIndex(players: Player[], positions: PositionDef[]) {
   const levelAt = (pos: PositionId, name: string | null | undefined): number => {
     if (!name) return 0;
     const skill = skillOf.get(pos);
-    return skill ? clampLevel(byName.get(name)?.skills?.[skill]) : 0;
+    return skill ? playerLevel(byName.get(name), skill, sport) : 0;
   };
 
+  /** A player's level at any skill (after the sport's fallback), unrated read as neutral. */
+  const levelIn = (name: string, skill: string): number =>
+    playerLevel(byName.get(name), skill, sport) || SKILL_NEUTRAL;
+
   return {
+    levelIn,
     /** Weak at the skill governing `pos`. Unrated (0) is deliberately not weak. */
     isLow: (pos: PositionId, name: string | null | undefined): boolean =>
       levelAt(pos, name) === SKILL_LOW,
@@ -34,14 +41,17 @@ function buildSkillIndex(players: Player[], positions: PositionDef[]) {
     strengthAt: (pos: PositionId, name: string | null | undefined): number =>
       levelAt(pos, name) || SKILL_NEUTRAL,
     /**
-     * One number per player for comparing whole rotations: the mean of every skill this
-     * game's positions are rated by (soccer: Defense and Offense; basketball: Overall),
-     * unrated counting as neutral.
+     * One number per player for comparing whole rotations. The sport's strength skill
+     * when it is rated (basketball: Overall, the coach's whole-player judgment);
+     * otherwise the mean of every skill this game's positions are rated by (soccer:
+     * Defense and Offense), unrated counting as neutral.
      */
     overall: (name: string): number => {
-      if (!gameSkills.length) return SKILL_NEUTRAL;
       const p = byName.get(name);
-      const sum = gameSkills.reduce((a, k) => a + (clampLevel(p?.skills?.[k]) || SKILL_NEUTRAL), 0);
+      const own = rules ? playerLevel(p, rules.strengthSkill, sport) : 0;
+      if (own) return own;
+      if (!gameSkills.length) return SKILL_NEUTRAL;
+      const sum = gameSkills.reduce((a, k) => a + (playerLevel(p, k, sport) || SKILL_NEUTRAL), 0);
       return sum / gameSkills.length;
     },
   };
@@ -137,6 +147,19 @@ function findDonor(
 }
 
 /**
+ * Breaches of the sport's floor rules by one rotation's on-floor group: one for each
+ * weak player past the cap, and one for having no ball handler. Unrated players are
+ * neither weak nor short of the handler level — an unrated team is never held back.
+ */
+function floorViolations(rules: LineupRules, skills: SkillIndex) {
+  return (onFloor: string[]): number => {
+    const weak = onFloor.filter(n => skills.overall(n) <= SKILL_LOW).length;
+    const handler = onFloor.some(n => skills.levelIn(n, rules.handler.skill) >= rules.handler.minLevel);
+    return Math.max(0, weak - rules.maxWeakOnFloor) + (handler || !onFloor.length ? 0 : 1);
+  };
+}
+
+/**
  * Pure function: returns new rotations for the current game.
  * Respects played rotations (frozen) and locked slots (fixed).
  * Balances position time using cumulative counts from the current game only.
@@ -144,11 +167,14 @@ function findDonor(
  *
  * When `settings.useSkillRatings` is on it also spreads talent across the position
  * lines, and — with `settings.strongFinish` — puts the strongest group on for the final
- * rotation while evening out the rest (see finishStrong). Neither changes how many
- * rotations anyone plays: both run after the playing-time pass and only rearrange it.
+ * rotation while evening out the rest (see finishStrong). A sport with lineup rules
+ * (basketball) also gets them enforced on every rotation's group — a ball handler on
+ * the floor, a cap on Bronze players — and offense and defense evened out across the
+ * game, with or without the strong finish. None of it changes how many rotations anyone
+ * plays: it all runs after the playing-time pass and only rearranges it.
  */
 export function autoGenerate(
-  state: Pick<AppState, 'players' | 'games' | 'curGame' | 'settings'>,
+  state: Pick<AppState, 'players' | 'games' | 'curGame' | 'settings' | 'team'>,
 ): Rotation[] {
   const game = getGame(state.games, state.curGame);
   if (!game) return [];
@@ -158,7 +184,8 @@ export function autoGenerate(
 
   const posIds = game.positions.map(p => p.id);
   const useSkills = state.settings.useSkillRatings;
-  const skills = buildSkillIndex(state.players, game.positions);
+  const rules = useSkills ? SPORTS[state.team.sport].lineupRules : undefined;
+  const skills = buildSkillIndex(state.players, game.positions, state.team.sport, rules);
 
   const zeroCounts = (): Counts => {
     const c = { total: 0 } as Counts;
@@ -268,24 +295,34 @@ export function autoGenerate(
   }
 
   // ── Phase 2: when they sit (talent across rotations). ───────────────────────
-  // finishStrong only swaps WHICH rotations a player sits, never how many, so phase 1's
-  // playing time stands exactly. A single greedy schedule can box it in (the no-back-to-
-  // back rule blocks the last trade), so with the setting on, try a few fair schedules
-  // and keep the best result. Each attempt costs well under a millisecond.
+  // repairFloorRules and finishStrong only swap WHICH rotations a player sits, never how
+  // many, so phase 1's playing time stands exactly. A single greedy schedule can box them
+  // in (the no-back-to-back rule blocks the last trade), so try a few fair schedules and
+  // keep the best: fewest floor-rule breaches, then strongest finish, then most even.
+  // Each attempt costs well under a millisecond.
   const strongFinish = useSkills && state.settings.strongFinish;
+  const arrange: ArrangeOptions | null = strongFinish || rules
+    ? {
+      stackFinish: strongFinish,
+      balance: rules ? rules.balance.map(k => (n: string) => skills.levelIn(n, k)) : [],
+      violations: rules ? floorViolations(rules, skills) : undefined,
+    }
+    : null;
   const first = planPlayingTime();
   let { work, plans } = first;
-  if (strongFinish) {
-    finishStrong(plans, skills.overall);
-    let best = scorePlan(plans, skills.overall);
+  if (arrange) {
+    const run = (p: RotationPlan[]) => {
+      finishStrong(p, skills.overall, arrange);
+      return scorePlan(p, skills.overall, arrange);
+    };
+    let best = run(plans);
     for (let attempt = 1; attempt < STRONG_FINISH_ATTEMPTS; attempt++) {
       const next = planPlayingTime(first.totals);
       // Choosing the best of several draws must not tilt who gets extra time toward the
       // stronger players, so only re-rolls that hit exactly the first draw's totals count.
       if (available.some(p => next.totals.get(p) !== first.totals.get(p))) continue;
-      finishStrong(next.plans, skills.overall);
-      const score = scorePlan(next.plans, skills.overall);
-      if (score[0] > best[0] || (score[0] === best[0] && score[1] > best[1])) {
+      const score = run(next.plans);
+      if (betterScore(score, best)) {
         ({ work, plans } = next);
         best = score;
       }

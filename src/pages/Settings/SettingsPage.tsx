@@ -239,7 +239,13 @@ export function SettingsPage({ user, onSignOut }: Props) {
               </div>
             )}
           </div>
-          {settings.useSkillRatings && settings.strongFinish && (
+          {settings.useSkillRatings && SPORTS[team.sport].lineupRules && (
+            <p className={styles.hint}>
+              Every lineup gets a ball handler (Silver or better on offense) and no more than two
+              Bronze players, with offense and defense spread evenly across rotations.
+            </p>
+          )}
+          {settings.useSkillRatings && (settings.strongFinish || SPORTS[team.sport].lineupRules) && (
             <p className={styles.hint}>
               Everyone still plays the same number of rotations — only when they sit changes.
             </p>

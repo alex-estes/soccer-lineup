@@ -18,7 +18,7 @@ export function PositionGroup({ pos, color, rIdx, rot, isPlayed }: Props) {
   const { state } = useAppState();
   // Derived at render, so a lineup edited by hand gets flagged too — not just
   // one the generator produced.
-  const weak = state.settings.useSkillRatings && isLineOverCap(state.players, rot, pos);
+  const weak = state.settings.useSkillRatings && isLineOverCap(state.players, rot, pos, state.team.sport);
   const slots = rot.slots[pos.id] ?? [];
   const Icon = state.team.sport === 'basketball' ? IconBallBasketball : IconSoccerField;
 
