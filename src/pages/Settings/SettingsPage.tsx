@@ -186,6 +186,16 @@ export function SettingsPage({ user, onSignOut }: Props) {
                     title={`Remove ${p.name}`}
                   />
                 </div>
+                <div className={styles.positionBottom}>
+                  <span className={styles.hint}>Players</span>
+                  <Stepper
+                    value={p.count}
+                    onChange={count => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { count } })}
+                    min={1}
+                    max={MAX_POSITION_COUNT}
+                    label={`${p.name} count`}
+                  />
+                </div>
                 {skillChoices.length > 1 && (
                   <div className={styles.positionBottom}>
                     <span className={styles.hint}>Rated by</span>
@@ -197,16 +207,6 @@ export function SettingsPage({ user, onSignOut }: Props) {
                     />
                   </div>
                 )}
-                <div className={styles.positionBottom}>
-                  <span className={styles.hint}>Players</span>
-                  <Stepper
-                    value={p.count}
-                    onChange={count => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { count } })}
-                    min={1}
-                    max={MAX_POSITION_COUNT}
-                    label={`${p.name} count`}
-                  />
-                </div>
               </div>
             ))}
           </div>
