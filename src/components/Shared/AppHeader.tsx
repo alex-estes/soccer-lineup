@@ -52,7 +52,6 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
           <DropdownMenu
             align="left"
             className={styles.headerMenu}
-            mutedIcons
             triggerRef={navRef}
             onClose={() => setNavOpen(false)}
             items={[

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IconUser, IconDots, IconPencil, IconTrash, IconUserOff, IconUserCheck, IconChevronRight } from '@tabler/icons-react';
 import { IconButton } from './IconButton';
@@ -15,15 +15,18 @@ interface Props {
 
 export function RosterCard({ player, onRename, onDelete, onToggleActive }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Holds the ⋯ button and the menu, so a second tap on ⋯ closes it.
+  const menuWrapRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className={styles.card}>
       <IconUser size={24} className={[styles.icon, player.active ? '' : styles.inactive].join(' ')} />
       <span className={[styles.name, player.active ? '' : styles.inactive].join(' ')}>{player.name}</span>
-      <div className={styles.menuWrap}>
+      <div ref={menuWrapRef} className={styles.menuWrap}>
         <IconButton icon={<IconDots size={24} />} onClick={() => setMenuOpen(o => !o)} title="Player options" />
         {menuOpen && (
           <DropdownMenu
+            triggerRef={menuWrapRef}
             onClose={() => setMenuOpen(false)}
             items={[
               { label: 'Rename', icon: <IconPencil size={24} />, onClick: onRename },
