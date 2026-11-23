@@ -10,6 +10,16 @@
   border-radius: var(--radius-lg);
 }
 
+.link {
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-8);
+  text-decoration: none;
+  min-height: var(--tap-min);
+}
+
 .icon {
   flex-shrink: 0;
   color: var(--neutral-300);

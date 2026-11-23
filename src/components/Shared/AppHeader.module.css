@@ -1,5 +1,10 @@
 .header {
+  /* Team switcher motion: chevron and menu slide share one duration and curve
+     (After Effects' "Easy Ease": 33% influence in and out). */
+  --switcher-duration: 200ms;
+  --switcher-easing: cubic-bezier(0.333, 0, 0.667, 1);
   display: flex;
+  height: var(--header-height);
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
@@ -100,7 +105,7 @@
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-secondary);
-  transition: transform 300ms ease-in-out;
+  transition: transform var(--switcher-duration) var(--switcher-easing);
 }
 
 .chevronOpen {
@@ -137,11 +142,11 @@
   max-width: 592px;
   margin: 0 auto;
   pointer-events: auto;
-  animation: teamMenuIn 300ms ease-out;
+  animation: teamMenuIn var(--switcher-duration) var(--switcher-easing);
 }
 
 .header .teamMenuClosing {
-  animation: teamMenuOut 300ms ease-in forwards;
+  animation: teamMenuOut var(--switcher-duration) var(--switcher-easing) forwards;
 }
 
 /* -100% of its own height, minus the 12px gap, puts it fully behind the header. */

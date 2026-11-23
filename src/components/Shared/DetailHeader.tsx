@@ -13,7 +13,7 @@ export function DetailHeader({ title, backTo = '/' }: Props) {
       <Link to={backTo} className={styles.iconButton} aria-label="Back">
         <IconArrowLeft size={24} />
       </Link>
-      <span className={styles.title}>{title}</span>
+      <span className={styles.title}>{title.toUpperCase()}</span>
       {/* Mirrors the back button's width so the title is optically centred. */}
       <span className={styles.spacer} aria-hidden="true" />
     </header>
