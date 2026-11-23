@@ -5,7 +5,9 @@ export interface DropdownItem {
   /** Defaults to `label`; set it when labels can repeat (e.g. two teams with one name). */
   key?: string;
   label: string;
-  icon: ReactNode;
+  icon?: ReactNode;
+  /** Pushed to the right edge of the row (e.g. a Select's check on the current choice). */
+  trailing?: ReactNode;
   danger?: boolean;
   onClick: () => void;
 }
@@ -50,6 +52,7 @@ export function DropdownMenu({ items, onClose, align = 'right', triggerRef, clas
       >
         {item.icon}
         {item.label}
+        {item.trailing && <span className={styles.trailing}>{item.trailing}</span>}
       </button>
     );
   }

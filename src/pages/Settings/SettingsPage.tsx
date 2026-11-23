@@ -186,18 +186,19 @@ export function SettingsPage({ user, onSignOut }: Props) {
                     title={`Remove ${p.name}`}
                   />
                 </div>
+                {skillChoices.length > 1 && (
+                  <div className={styles.positionBottom}>
+                    <span className={styles.hint}>Rated by</span>
+                    <Select
+                      value={p.skill}
+                      options={skillChoices.map(s => ({ value: s.key, label: s.label }))}
+                      onChange={skill => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { skill } })}
+                      label={`${p.name} rated by`}
+                    />
+                  </div>
+                )}
                 <div className={styles.positionBottom}>
-                  {skillChoices.length > 1 ? (
-                    <div className={styles.skillPick}>
-                      <span>Rated by</span>
-                      <Select
-                        value={p.skill}
-                        options={skillChoices.map(s => ({ value: s.key, label: s.label }))}
-                        onChange={skill => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { skill } })}
-                        label={`${p.name} rated by`}
-                      />
-                    </div>
-                  ) : <span className={styles.hint}>Players</span>}
+                  <span className={styles.hint}>Players</span>
                   <Stepper
                     value={p.count}
                     onChange={count => dispatch({ type: 'UPDATE_POSITION', id: p.id, patch: { count } })}

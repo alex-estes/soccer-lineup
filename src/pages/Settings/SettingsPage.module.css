@@ -141,23 +141,6 @@
   border-radius: 50%;
 }
 
-.skillPick {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--space-8);
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-text-secondary);
-}
-
-.skillPick > span {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
 .codeRow {
   display: flex;
   align-items: center;

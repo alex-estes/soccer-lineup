@@ -19,7 +19,7 @@ interface Props {
 /**
  * The app's stand-in for a native <select>: a Button-height trigger with the same
  * chevron as the title switcher, opening the shared DropdownMenu. The current
- * choice is marked with a check.
+ * choice is marked with a check on the right.
  */
 export function Select({ value, options, onChange, label }: Props) {
   const [open, setOpen] = useState(false);
@@ -43,16 +43,13 @@ export function Select({ value, options, onChange, label }: Props) {
       </button>
       {open && (
         <DropdownMenu
-          align="left"
-          className={styles.menu}
+          align="right"
           triggerRef={buttonRef}
           onClose={close}
           items={options.map(o => ({
             key: o.value,
             label: o.label,
-            icon: o.value === value
-              ? <IconCheck size={24} className={styles.check} />
-              : <span className={styles.iconSpacer} />,
+            trailing: o.value === value ? <IconCheck size={24} className={styles.check} /> : undefined,
             onClick: () => { if (o.value !== value) onChange(o.value); },
           }))}
         />

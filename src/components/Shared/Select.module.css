@@ -49,17 +49,10 @@
   transform: rotate(180deg);
 }
 
-/* Beats DropdownMenu's grey icon colour (.item:not(.danger) > svg) for the selected item. */
-.menu > button > svg.check {
+/* Teal, not DropdownMenu's grey icon colour (it isn't the row's leading icon). */
+.check {
   flex-shrink: 0;
   color: var(--color-brand-primary);
-}
-
-/* Keeps labels aligned with the checked item's. */
-.iconSpacer {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
 }
 
 @media (prefers-reduced-motion: reduce) {
