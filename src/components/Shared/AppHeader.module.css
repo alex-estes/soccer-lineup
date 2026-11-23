@@ -173,3 +173,8 @@
   flex-shrink: 0;
   color: var(--color-brand-primary);
 }
+
+/* Nav and account menus share one width, with room around short labels. */
+.header .headerMenu {
+  min-width: 200px;
+}

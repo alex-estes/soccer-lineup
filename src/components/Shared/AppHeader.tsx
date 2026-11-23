@@ -51,6 +51,8 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
         {navOpen && (
           <DropdownMenu
             align="left"
+            className={styles.headerMenu}
+            mutedIcons
             triggerRef={navRef}
             onClose={() => setNavOpen(false)}
             items={[
@@ -108,9 +110,10 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
         </button>
         {avatarOpen && (
           <DropdownMenu
+            className={styles.headerMenu}
             triggerRef={avatarRef}
             onClose={() => setAvatarOpen(false)}
-            items={[{ label: 'Sign Out', icon: <IconLogout size={24} />, onClick: onSignOut }]}
+            items={[{ label: 'Sign Out', icon: <IconLogout size={24} />, danger: true, onClick: onSignOut }]}
           />
         )}
       </div>
