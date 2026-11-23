@@ -5,7 +5,7 @@ import { before, after, beforeEach, test } from 'node:test';
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, collection, query, where,
-  arrayUnion, arrayRemove, deleteField,
+  arrayUnion, arrayRemove, deleteField, collectionGroup, getCountFromServer,
 } from 'firebase/firestore';
 
 let env;
@@ -161,4 +161,38 @@ test('owner deletes the team with its games and code in one batch', async () => 
 test('legacy lineup is private to its owner', async () => {
   await assertSucceeds(setDoc(doc(db('alice'), 'users', 'alice', 'lineups', 'main'), { players: [] }));
   await assertFails(getDoc(doc(db('bob'), 'users', 'alice', 'lineups', 'main')));
+});
+
+// ── Admin (read-only owner access for the stats page) ──
+const ADMIN = 'DP2b237SQCQWPBMstuNAouiEzzJ2';
+
+test('the admin can list every team and count every game', async () => {
+  await createTeam();
+  const d = db(ADMIN);
+  await assertSucceeds(getDocs(collection(d, 'teams')));
+  await assertSucceeds(getDoc(team(d)));
+  await assertSucceeds(getDocs(collectionGroup(d, 'games')));
+  await assertSucceeds(getCountFromServer(collectionGroup(d, 'games')));
+  await assertSucceeds(getCountFromServer(query(collectionGroup(d, 'games'), where('completed', '==', true))));
+});
+
+test('the admin gets no write access', async () => {
+  await createTeam();
+  const d = db(ADMIN);
+  await assertFails(updateDoc(team(d), { name: 'Hacked' }));
+  await assertFails(deleteDoc(team(d)));
+  await assertFails(updateDoc(game(d), { name: 'Hacked' }));
+  await assertFails(deleteDoc(game(d)));
+  await assertFails(getDocs(collection(d, 'joinCodes')));
+});
+
+test('no one else can list all teams or query all games — not even a team owner', async () => {
+  await createTeam();
+  for (const uid of ['mallory', 'owner']) {
+    const d = db(uid);
+    await assertFails(getDocs(collection(d, 'teams')));
+    await assertFails(getDocs(collectionGroup(d, 'games')));
+    await assertFails(getCountFromServer(collectionGroup(d, 'games')));
+  }
+  await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(), 'teams')));
 });

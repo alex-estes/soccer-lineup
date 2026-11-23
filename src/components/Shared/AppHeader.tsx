@@ -1,8 +1,9 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  IconMenu, IconUser, IconLogout, IconHome, IconSettings, IconUsersGroup,
+  IconMenu, IconUser, IconLogout, IconHome, IconSettings, IconUsersGroup, IconChartBar,
 } from '@tabler/icons-react';
+import { isAdmin } from '../../lib/admin';
 import type { User } from 'firebase/auth';
 import { DropdownMenu } from './DropdownMenu';
 import { SportIcon } from './SportIcon';
@@ -51,6 +52,9 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
                 { label: 'Team Settings', icon: <IconSettings size={24} />, onClick: () => navigate('/settings') },
               ] : []),
               { label: 'Switch Team', icon: <IconUsersGroup size={24} />, onClick: () => navigate('/teams') },
+              ...(isAdmin(user) ? [
+                { label: 'Admin', icon: <IconChartBar size={24} />, onClick: () => navigate('/admin') },
+              ] : []),
             ]}
           />
         )}

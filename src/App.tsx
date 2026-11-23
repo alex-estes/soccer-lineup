@@ -9,6 +9,7 @@ import { GameDayPage } from './pages/GameDay/GameDayPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { PlayerPage } from './pages/Player/PlayerPage';
 import { TeamsPage } from './pages/Teams/TeamsPage';
+import { AdminPage } from './pages/Admin/AdminPage';
 import { AppContext } from './state/AppContext';
 import { TeamSwitcherContext } from './state/TeamSwitcherContext';
 import { reducer, makeInitialState } from './state/reducer';
@@ -103,6 +104,8 @@ function SignedInApp({ user, onSignOut }: { user: User; onSignOut: () => void })
     <TeamSwitcherContext.Provider value={switcher}>
       <HashRouter>
         <Routes>
+          {/* Outside TeamApp, so it works with no team open. Owner only (see lib/admin). */}
+          <Route path="/admin" element={<AdminPage user={user} />} />
           <Route
             path="/teams"
             element={
