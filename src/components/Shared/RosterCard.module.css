@@ -30,7 +30,7 @@
 }
 
 .name {
-  /* Shrinks to its text, so a medal sits right after it; the link fills the row. */
+  /* Shrinks to its text, so the Overall icon sits right after it; the link fills the row. */
   flex: 0 1 auto;
   min-width: 0;
   font-family: var(--font-sans);
@@ -65,14 +65,14 @@
   color: var(--neutral-300);
 }
 
-/* Basketball: one medal in the Overall tier's colour, right after the name. */
-.medal {
+/* Basketball: the Overall rating's icon, right after the name. */
+.overall {
   display: inline-flex;
   flex-shrink: 0;
   line-height: 0;
 }
 
-.medal.inactive {
+.overall.inactive {
   opacity: 0.5;
 }
 
