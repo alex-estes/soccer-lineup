@@ -176,5 +176,5 @@
 
 /* Nav and account menus share one width, with room around short labels. */
 .header .headerMenu {
-  min-width: 200px;
+  min-width: 240px;
 }
