@@ -100,7 +100,7 @@
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-secondary);
-  transition: transform 350ms ease-in-out;
+  transition: transform 300ms ease-in-out;
 }
 
 .chevronOpen {
@@ -113,14 +113,53 @@
   }
 }
 
-/* Positioned against the header (sticky, so it's the containing block): spans the
-   page with 24px each side, capped to the content column on wide screens. */
+/* Positioned against the header (sticky, so it's the containing block), starting just
+   below its bottom border. It clips the menu, so the menu appears to slide out from
+   under the header. The padding leaves room for the 12px gap, the 24px side margins
+   and the menu's shadow; taps pass through the empty parts. */
+.teamMenuClip {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 12px 24px 32px;
+  pointer-events: none;
+}
+
+/* Spans the page inside the clip's padding, capped to the content column on wide screens. */
 .header .teamMenu {
-  left: 24px;
-  right: 24px;
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
   width: auto;
   max-width: 592px;
   margin: 0 auto;
+  pointer-events: auto;
+  animation: teamMenuIn 300ms ease-out;
+}
+
+.header .teamMenuClosing {
+  animation: teamMenuOut 300ms ease-in forwards;
+}
+
+/* -100% of its own height, minus the 12px gap, puts it fully behind the header. */
+@keyframes teamMenuIn {
+  from { transform: translateY(calc(-100% - 12px)); }
+  to { transform: none; }
+}
+
+@keyframes teamMenuOut {
+  from { transform: none; }
+  to { transform: translateY(calc(-100% - 12px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header .teamMenu,
+  .header .teamMenuClosing {
+    animation: none;
+  }
 }
 
 .header .teamMenu > button {
@@ -133,4 +172,9 @@
 .teamIcon {
   flex-shrink: 0;
   color: var(--color-brand-primary);
+}
+
+/* Nav and account menus share one width, with room around short labels. */
+.header .headerMenu {
+  min-width: 240px;
 }

@@ -21,7 +21,9 @@ interface Props {
 export function AppHeader({ user, onSignOut, center, title }: Props) {
   const [navOpen, setNavOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [teamsOpen, setTeamsOpen] = useState(false);
+  // 'closing' keeps the menu mounted while it slides back up under the header.
+  const [teamsMenu, setTeamsMenu] = useState<'closed' | 'open' | 'closing'>('closed');
+  const teamsOpen = teamsMenu === 'open';
   const navRef = useRef<HTMLButtonElement>(null);
   const avatarRef = useRef<HTMLButtonElement>(null);
   const teamsRef = useRef<HTMLButtonElement>(null);
@@ -34,6 +36,12 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
 
   const titleText = (title ?? 'Teams').toUpperCase();
 
+  function closeTeams() {
+    // Without the slide there's no animationend to finish the close on.
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    setTeamsMenu(m => (m === 'closed' ? m : reduceMotion ? 'closed' : 'closing'));
+  }
+
   return (
     <header className={styles.header}>
       <div className={styles.navWrap}>
@@ -43,6 +51,8 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
         {navOpen && (
           <DropdownMenu
             align="left"
+            className={styles.headerMenu}
+            mutedIcons
             triggerRef={navRef}
             onClose={() => setNavOpen(false)}
             items={[
@@ -61,25 +71,30 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
             ref={teamsRef}
             type="button"
             className={styles.titleButton}
-            onClick={() => setTeamsOpen(o => !o)}
+            onClick={() => (teamsOpen ? closeTeams() : setTeamsMenu('open'))}
             aria-haspopup="menu"
             aria-expanded={teamsOpen}
           >
             <span className={styles.title}>{titleText}</span>
             <IconChevronDown size={24} className={[styles.chevron, teamsOpen ? styles.chevronOpen : ''].filter(Boolean).join(' ')} />
           </button>
-          {teamsOpen && (
-            <DropdownMenu
-              className={styles.teamMenu}
-              triggerRef={teamsRef}
-              onClose={() => setTeamsOpen(false)}
-              items={otherTeams.map(t => ({
-                key: t.meta.id,
-                label: t.meta.name,
-                icon: <SportIcon sport={t.meta.sport} className={styles.teamIcon} />,
-                onClick: () => { switcher?.onSelect(t.meta.id); navigate('/'); },
-              }))}
-            />
+          {teamsMenu !== 'closed' && (
+            <div
+              className={styles.teamMenuClip}
+              onAnimationEnd={() => setTeamsMenu(m => (m === 'closing' ? 'closed' : m))}
+            >
+              <DropdownMenu
+                className={[styles.teamMenu, teamsMenu === 'closing' ? styles.teamMenuClosing : ''].filter(Boolean).join(' ')}
+                triggerRef={teamsRef}
+                onClose={closeTeams}
+                items={otherTeams.map(t => ({
+                  key: t.meta.id,
+                  label: t.meta.name,
+                  icon: <SportIcon sport={t.meta.sport} className={styles.teamIcon} />,
+                  onClick: () => { switcher?.onSelect(t.meta.id); navigate('/'); },
+                }))}
+              />
+            </div>
           )}
         </>
       ) : (
@@ -95,9 +110,10 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
         </button>
         {avatarOpen && (
           <DropdownMenu
+            className={styles.headerMenu}
             triggerRef={avatarRef}
             onClose={() => setAvatarOpen(false)}
-            items={[{ label: 'Sign Out', icon: <IconLogout size={24} />, onClick: onSignOut }]}
+            items={[{ label: 'Sign Out', icon: <IconLogout size={24} />, danger: true, onClick: onSignOut }]}
           />
         )}
       </div>

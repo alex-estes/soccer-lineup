@@ -47,3 +47,7 @@
 .danger {
   color: var(--color-danger);
 }
+
+.mutedIcons .item:not(.danger) > svg {
+  color: var(--color-text-secondary);
+}
