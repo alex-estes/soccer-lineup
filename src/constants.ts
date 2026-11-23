@@ -8,8 +8,8 @@ export interface SkillDef {
   group: 'hard' | 'soft';
 }
 
-/** How a rating level is drawn: soccer's C/B/A letters or basketball's medals. */
-export type RatingStyle = 'letter' | 'medal';
+/** How a rating level is drawn: soccer's C/B/A letters or basketball's 0/33/66/100% icons. */
+export type RatingStyle = 'letter' | 'percent';
 
 /**
  * Rules about the whole group on the floor in a rotation, on top of the per-position
@@ -78,7 +78,7 @@ export const SPORTS: Record<SportId, SportConfig> = {
     id: 'basketball',
     label: 'Basketball',
     scoreLabel: 'Points',
-    ratingStyle: 'medal',
+    ratingStyle: 'percent',
     // Overall stays first: it is what every default position is rated by, and existing
     // players' Overall ratings carry over unchanged (1/2/3 → Bronze/Silver/Gold).
     skills: [

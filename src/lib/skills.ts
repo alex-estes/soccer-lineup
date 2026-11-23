@@ -17,14 +17,14 @@ export function skillLetter(level: number): string {
 
 const TIERS = ['Unrated', 'Bronze', 'Silver', 'Gold'] as const;
 
-/** Basketball's name for a level — also the accessible label for its medal. */
+/** Basketball's name for a level — also the accessible label for its icon. */
 export function tierName(level: number): string {
   return TIERS[Math.min(SKILL_MAX, Math.max(SKILL_MIN, Math.trunc(level || 0)))];
 }
 
-const TIER_COLORS = ['', 'var(--tier-bronze)', 'var(--tier-silver)', 'var(--tier-gold)'];
+const TIER_COLORS = ['var(--color-text-secondary)', 'var(--tier-bronze)', 'var(--tier-silver)', 'var(--tier-gold)'];
 
-/** A basketball level's medal colour (a CSS value); empty for unrated. */
+/** A basketball level's icon colour (a CSS value); grey for unrated. */
 export function tierColor(level: number): string {
   return TIER_COLORS[Math.min(SKILL_MAX, Math.max(SKILL_MIN, Math.trunc(level || 0)))];
 }

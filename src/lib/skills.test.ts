@@ -22,7 +22,7 @@ describe('skillLetter', () => {
 });
 
 describe('tierName', () => {
-  it('maps levels to basketball\'s medal tiers', () => {
+  it('maps levels to basketball\'s tier names', () => {
     expect([0, 1, 2, 3].map(tierName)).toEqual(['Unrated', 'Bronze', 'Silver', 'Gold']);
   });
 

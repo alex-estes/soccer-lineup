@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { IconUser, IconMedal, IconDots, IconPencil, IconTrash, IconUserOff, IconUserCheck, IconChevronRight } from '@tabler/icons-react';
+import { IconUser, IconDots, IconPencil, IconTrash, IconUserOff, IconUserCheck, IconChevronRight } from '@tabler/icons-react';
 import { IconButton } from './IconButton';
 import { DropdownMenu } from './DropdownMenu';
 import { SkillRating } from './SkillRating';
 import { SPORTS } from '../../constants';
-import { clampLevel, normalizeSkills, tierColor, tierName } from '../../lib/skills';
+import { normalizeSkills } from '../../lib/skills';
 import type { Player, SportId } from '../../types';
 import styles from './RosterCard.module.css';
 
@@ -28,9 +28,9 @@ export function RosterCard({ player, sport, showRatings, onRename, onDelete, onT
   const skills = normalizeSkills(player.skills, sport);
   // Only the ratings the lineup generator can use; soft skills stay on the player page.
   const ratings = skillDefs.filter(s => s.group === 'hard');
-  // Medal sports (basketball) show one medal in the player's Overall colour (the
-  // fallback skill) instead of every rating; unrated players get none.
-  const medalLevel = ratingStyle === 'medal' && fallbackSkill ? clampLevel(skills[fallbackSkill]) : 0;
+  // Basketball shows just the player's Overall (its fallback skill) as one icon after
+  // the name; soccer shows every hard rating at the right edge.
+  const overallSkill = ratingStyle === 'percent' ? fallbackSkill : undefined;
 
   const playerPath = `/player/${encodeURIComponent(player.name)}`;
 
@@ -40,17 +40,12 @@ export function RosterCard({ player, sport, showRatings, onRename, onDelete, onT
       <Link to={playerPath} className={styles.link}>
         <IconUser size={24} className={[styles.icon, player.active ? '' : styles.inactive].join(' ')} />
         <span className={[styles.name, player.active ? '' : styles.inactive].join(' ')}>{player.name}</span>
-        {showRatings && medalLevel > 0 && (
-          <span
-            className={[styles.medal, player.active ? '' : styles.inactive].join(' ')}
-            role="img"
-            aria-label={`${tierName(medalLevel)} overall`}
-            title={`${tierName(medalLevel)} overall`}
-          >
-            <IconMedal size={24} style={{ color: tierColor(medalLevel) }} aria-hidden />
+        {showRatings && overallSkill && (
+          <span className={[styles.overall, player.active ? '' : styles.inactive].join(' ')}>
+            <SkillRating level={skills[overallSkill]} ratingStyle={ratingStyle} />
           </span>
         )}
-        {showRatings && ratingStyle !== 'medal' && (
+        {showRatings && !overallSkill && (
           <span className={[styles.ratings, player.active ? '' : styles.inactive].join(' ')}>
             {ratings.map(s => (
               <span key={s.key} className={styles.rating}>
