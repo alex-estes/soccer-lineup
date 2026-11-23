@@ -46,13 +46,26 @@ export function normalizeSkills(raw: unknown, sport: SportId): PlayerSkills {
 }
 
 /**
+ * A player's level at `skill`, falling back to the sport's fallback skill (basketball:
+ * Overall) when that one isn't rated. Every reader of ratings — the slot chip, the WEAK
+ * flag and the lineup generator — goes through here, so they always agree.
+ */
+export function playerLevel(player: Player | undefined, skill: SkillKey, sport: SportId): SkillLevel {
+  const own = clampLevel(player?.skills?.[skill]);
+  if (own) return own;
+  const fallback = SPORTS[sport].fallbackSkill;
+  return fallback && fallback !== skill ? clampLevel(player?.skills?.[fallback]) : 0;
+}
+
+/**
  * Tolerates a name that is on no roster at all (a deleted player still referenced by a
  * locked slot) by reporting it unrated, which never blocks anything.
  */
-export function levelOf(players: Player[], name: string | null | undefined, skill: SkillKey): SkillLevel {
+export function levelOf(
+  players: Player[], name: string | null | undefined, skill: SkillKey, sport: SportId,
+): SkillLevel {
   if (!name) return 0;
-  const p = players.find(x => x.name === name);
-  return p ? clampLevel(p.skills?.[skill]) : 0;
+  return playerLevel(players.find(x => x.name === name), skill, sport);
 }
 
 /**
@@ -64,13 +77,13 @@ export function lineWeakCap(size: number): number {
 }
 
 /** Weak players currently standing in one of `rot`'s position lines. */
-export function lineWeakCount(players: Player[], rot: Rotation, pos: PositionDef): number {
-  return (rot.slots[pos.id] ?? []).filter(n => levelOf(players, n, pos.skill) === SKILL_LOW).length;
+export function lineWeakCount(players: Player[], rot: Rotation, pos: PositionDef, sport: SportId): number {
+  return (rot.slots[pos.id] ?? []).filter(n => levelOf(players, n, pos.skill, sport) === SKILL_LOW).length;
 }
 
 /** True when a line holds more weak players than its cap allows — the "WEAK" flag. */
-export function isLineOverCap(players: Player[], rot: Rotation, pos: PositionDef): boolean {
+export function isLineOverCap(players: Player[], rot: Rotation, pos: PositionDef, sport: SportId): boolean {
   const size = rot.slots[pos.id]?.length ?? 0;
   if (size === 0) return false;
-  return lineWeakCount(players, rot, pos) > lineWeakCap(size);
+  return lineWeakCount(players, rot, pos, sport) > lineWeakCap(size);
 }

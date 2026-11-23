@@ -72,7 +72,7 @@ export function PlayerSlot({ rIdx, pos, skill, sIdx, playerName, locked, isPlaye
             {state.settings.useSkillRatings && (
               <Chip tone="neutral" size="sm">
                 <SkillRating
-                  level={levelOf(state.players, playerName, skill)}
+                  level={levelOf(state.players, playerName, skill, state.team.sport)}
                   ratingStyle={SPORTS[state.team.sport].ratingStyle}
                   size={16}
                 />

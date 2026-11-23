@@ -35,6 +35,11 @@ export interface SportConfig {
   scoreLabel: string;
   ratingStyle: RatingStyle;
   skills: SkillDef[];
+  /**
+   * Read in place of any other skill a player hasn't been rated on yet (basketball:
+   * Overall), so a coach can rate Overall alone and fill in offense/defense over time.
+   */
+  fallbackSkill?: SkillKey;
   lineupRules?: LineupRules;
   defaultSettings: TeamSettings;
 }
@@ -81,6 +86,7 @@ export const SPORTS: Record<SportId, SportConfig> = {
       { key: 'offense', label: 'Offense', abbr: 'OFF', group: 'hard' },
       { key: 'defense', label: 'Defense', abbr: 'DEF', group: 'hard' },
     ],
+    fallbackSkill: 'overall',
     lineupRules: {
       strengthSkill: 'overall',
       // Never more than two Bronze of five: a developing player always has stronger

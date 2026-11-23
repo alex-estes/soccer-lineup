@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type { Player, PlayerSkills } from '../types';
 import {
   clampLevel, emptySkills, isLineOverCap, levelOf, lineWeakCap, lineWeakCount,
-  normalizeSkills, skillLetter, tierName,
+  normalizeSkills, playerLevel, skillLetter, tierName,
 } from './skills';
 import { emptyRotations } from './utils';
 import { mkPlayers, F222, TWO_WEAK_DEFENDERS } from '../test/fixtures';
@@ -29,6 +30,27 @@ describe('tierName', () => {
     expect(tierName(-1)).toBe('Unrated');
     expect(tierName(99)).toBe('Gold');
     expect(tierName(NaN)).toBe('Unrated');
+  });
+});
+
+describe('playerLevel', () => {
+  const jo = (skills: PlayerSkills): Player => ({ name: 'Jo', active: true, skills });
+
+  it('falls back to Overall for a basketball skill not rated yet', () => {
+    expect(playerLevel(jo({ overall: 3, offense: 0, defense: 1 }), 'offense', 'basketball')).toBe(3);
+    expect(playerLevel(jo({ overall: 3, offense: 0, defense: 1 }), 'defense', 'basketball')).toBe(1);
+  });
+
+  it('is unrated only when Overall is unrated too', () => {
+    expect(playerLevel(jo({ overall: 0, offense: 0, defense: 0 }), 'offense', 'basketball')).toBe(0);
+  });
+
+  it('has no fallback in soccer', () => {
+    expect(playerLevel(jo({ defense: 0, offense: 3 }), 'defense', 'soccer')).toBe(0);
+  });
+
+  it('treats a missing player as unrated', () => {
+    expect(playerLevel(undefined, 'offense', 'basketball')).toBe(0);
   });
 });
 
@@ -68,21 +90,21 @@ describe('line inspection', () => {
   it('counts only explicit C ratings — unrated is neutral, never weak', () => {
     const rot = emptyRotations(F222, 1)[0];
     rot.slots.def = ['Alex', 'Jordan']; // Alex is C, Jordan is A
-    expect(lineWeakCount(players, rot, DEF)).toBe(1);
+    expect(lineWeakCount(players, rot, DEF, 'soccer')).toBe(1);
 
     rot.slots.def = ['Alex', 'Taylor']; // both C
-    expect(lineWeakCount(players, rot, DEF)).toBe(2);
+    expect(lineWeakCount(players, rot, DEF, 'soccer')).toBe(2);
 
     rot.slots.def = ['Nobody', 'AlsoNobody']; // unknown names read as unrated
-    expect(lineWeakCount(players, rot, DEF)).toBe(0);
+    expect(lineWeakCount(players, rot, DEF, 'soccer')).toBe(0);
   });
 
   it('flags a line only once it exceeds its cap', () => {
     const rot = emptyRotations(F222, 1)[0];
     rot.slots.def = ['Alex', 'Jordan'];
-    expect(isLineOverCap(players, rot, DEF)).toBe(false);
+    expect(isLineOverCap(players, rot, DEF, 'soccer')).toBe(false);
     rot.slots.def = ['Alex', 'Taylor'];
-    expect(isLineOverCap(players, rot, DEF)).toBe(true);
+    expect(isLineOverCap(players, rot, DEF, 'soccer')).toBe(true);
   });
 
   it('judges each line by the skill its position names', () => {
@@ -90,7 +112,7 @@ describe('line inspection', () => {
     const rot = emptyRotations(F222, 1)[0];
     rot.slots.def = ['Alex', 'Taylor'];
     // The same two players, judged on offense (unrated), are fine.
-    expect(isLineOverCap(players, rot, { ...DEF, skill: 'offense' })).toBe(false);
+    expect(isLineOverCap(players, rot, { ...DEF, skill: 'offense' }, 'soccer')).toBe(false);
   });
 });
 
@@ -98,11 +120,11 @@ describe('levelOf', () => {
   const players = mkPlayers(['Alex'], { Alex: 2 });
 
   it('reads the requested skill', () => {
-    expect(levelOf(players, 'Alex', 'defense')).toBe(2);
+    expect(levelOf(players, 'Alex', 'defense', 'soccer')).toBe(2);
   });
 
   it('treats a deleted player still sitting in a locked slot as unrated', () => {
-    expect(levelOf(players, 'Ghost', 'defense')).toBe(0);
-    expect(levelOf(players, null, 'defense')).toBe(0);
+    expect(levelOf(players, 'Ghost', 'defense', 'soccer')).toBe(0);
+    expect(levelOf(players, null, 'defense', 'soccer')).toBe(0);
   });
 });

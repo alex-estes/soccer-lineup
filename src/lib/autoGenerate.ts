@@ -1,10 +1,10 @@
 import { playersOnField, SPORTS, type LineupRules } from '../constants';
-import type { AppState, Player, PositionDef, PositionId, Rotation } from '../types';
+import type { AppState, Player, PositionDef, PositionId, Rotation, SportId } from '../types';
 import { availablePlayersForGame, cloneRotation, ensureShape, getGame, namesOnField, shuffleArr } from './utils';
 import {
   betterScore, finishStrong, scorePlan, type ArrangeOptions, type RotationPlan,
 } from './strongFinish';
-import { clampLevel, lineWeakCap, SKILL_LOW, SKILL_NEUTRAL } from './skills';
+import { lineWeakCap, playerLevel, SKILL_LOW, SKILL_NEUTRAL } from './skills';
 
 const STRONG_FINISH_ATTEMPTS = 24;
 
@@ -17,7 +17,7 @@ type Counts = Record<PositionId, number> & { total: number };
  * still rated correctly. A name on no roster at all — a deleted player still referenced
  * by a locked slot — reads as unrated, which never blocks anything.
  */
-function buildSkillIndex(players: Player[], positions: PositionDef[], rules?: LineupRules) {
+function buildSkillIndex(players: Player[], positions: PositionDef[], sport: SportId, rules?: LineupRules) {
   const byName = new Map(players.map(p => [p.name, p]));
   const skillOf = new Map(positions.map(p => [p.id, p.skill]));
   const gameSkills = [...new Set(positions.map(p => p.skill))];
@@ -25,12 +25,12 @@ function buildSkillIndex(players: Player[], positions: PositionDef[], rules?: Li
   const levelAt = (pos: PositionId, name: string | null | undefined): number => {
     if (!name) return 0;
     const skill = skillOf.get(pos);
-    return skill ? clampLevel(byName.get(name)?.skills?.[skill]) : 0;
+    return skill ? playerLevel(byName.get(name), skill, sport) : 0;
   };
 
-  /** A player's level at any skill, unrated read as neutral. */
+  /** A player's level at any skill (after the sport's fallback), unrated read as neutral. */
   const levelIn = (name: string, skill: string): number =>
-    clampLevel(byName.get(name)?.skills?.[skill]) || SKILL_NEUTRAL;
+    playerLevel(byName.get(name), skill, sport) || SKILL_NEUTRAL;
 
   return {
     levelIn,
@@ -48,10 +48,10 @@ function buildSkillIndex(players: Player[], positions: PositionDef[], rules?: Li
      */
     overall: (name: string): number => {
       const p = byName.get(name);
-      const own = rules ? clampLevel(p?.skills?.[rules.strengthSkill]) : 0;
+      const own = rules ? playerLevel(p, rules.strengthSkill, sport) : 0;
       if (own) return own;
       if (!gameSkills.length) return SKILL_NEUTRAL;
-      const sum = gameSkills.reduce((a, k) => a + (clampLevel(p?.skills?.[k]) || SKILL_NEUTRAL), 0);
+      const sum = gameSkills.reduce((a, k) => a + (playerLevel(p, k, sport) || SKILL_NEUTRAL), 0);
       return sum / gameSkills.length;
     },
   };
@@ -185,7 +185,7 @@ export function autoGenerate(
   const posIds = game.positions.map(p => p.id);
   const useSkills = state.settings.useSkillRatings;
   const rules = useSkills ? SPORTS[state.team.sport].lineupRules : undefined;
-  const skills = buildSkillIndex(state.players, game.positions, rules);
+  const skills = buildSkillIndex(state.players, game.positions, state.team.sport, rules);
 
   const zeroCounts = (): Counts => {
     const c = { total: 0 } as Counts;
