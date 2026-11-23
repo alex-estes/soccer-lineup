@@ -1,8 +1,4 @@
 .header {
-  /* Team switcher motion: chevron and menu slide share one duration and curve
-     (After Effects' "Easy Ease": 33% influence in and out). */
-  --switcher-duration: 200ms;
-  --switcher-easing: cubic-bezier(0.333, 0, 0.667, 1);
   display: flex;
   height: var(--header-height);
   flex-direction: row;
@@ -39,17 +35,13 @@
   cursor: pointer;
 }
 
-.title {
-  font-family: var(--font-sans);
-  font-weight: 800;
-  font-size: var(--font-size-base);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Centres the title (or team switcher). Not positioned, so the switcher's menu
+   positions against the header itself. */
+.titleSlot {
+  display: flex;
+  justify-content: center;
+  flex: 1 1 auto;
   min-width: 0;
-  padding: 0 var(--space-8);
 }
 
 .avatarWrap {
@@ -81,101 +73,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-brand-primary);
-}
-
-/* Team name + chevron: opens the team switcher. The whole area is the tap target. */
-.titleButton {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  min-width: 0;
-  min-height: var(--tap-min);
-  padding: 0 var(--space-8);
-  background: none;
-  border: none;
-  color: var(--color-text-primary);
-  cursor: pointer;
-}
-
-.titleButton .title {
-  padding: 0;
-}
-
-.chevron {
-  flex-shrink: 0;
-  color: var(--color-text-secondary);
-  transition: transform var(--switcher-duration) var(--switcher-easing);
-}
-
-.chevronOpen {
-  transform: rotate(180deg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chevron {
-    transition: none;
-  }
-}
-
-/* Positioned against the header (sticky, so it's the containing block), starting just
-   below its bottom border. It clips the menu, so the menu appears to slide out from
-   under the header. The padding leaves room for the 12px gap, the 24px side margins
-   and the menu's shadow; taps pass through the empty parts. */
-.teamMenuClip {
-  position: absolute;
-  top: calc(100% + 2px);
-  left: 0;
-  right: 0;
-  overflow: hidden;
-  padding: 12px 24px 32px;
-  pointer-events: none;
-}
-
-/* Spans the page inside the clip's padding, capped to the content column on wide screens. */
-.header .teamMenu {
-  position: relative;
-  top: auto;
-  left: auto;
-  right: auto;
-  width: auto;
-  max-width: 592px;
-  margin: 0 auto;
-  pointer-events: auto;
-  animation: teamMenuIn var(--switcher-duration) var(--switcher-easing);
-}
-
-.header .teamMenuClosing {
-  animation: teamMenuOut var(--switcher-duration) var(--switcher-easing) forwards;
-}
-
-/* -100% of its own height, minus the 12px gap, puts it fully behind the header. */
-@keyframes teamMenuIn {
-  from { transform: translateY(calc(-100% - 12px)); }
-  to { transform: none; }
-}
-
-@keyframes teamMenuOut {
-  from { transform: none; }
-  to { transform: translateY(calc(-100% - 12px)); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .header .teamMenu,
-  .header .teamMenuClosing {
-    animation: none;
-  }
-}
-
-.header .teamMenu > button {
-  gap: var(--space-8);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.header .teamMenu .teamIcon {
-  flex-shrink: 0;
   color: var(--color-brand-primary);
 }
 

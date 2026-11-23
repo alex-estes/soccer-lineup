@@ -27,18 +27,13 @@
   flex-shrink: 0;
 }
 
-.title {
+/* Centres the title (or player switcher) between the back button and its spacer.
+   Not positioned, so the switcher's menu positions against the header itself. */
+.titleSlot {
+  display: flex;
+  justify-content: center;
   flex: 1 0 0;
   min-width: 0;
-  text-align: center;
-  font-family: var(--font-sans);
-  font-weight: 800;
-  font-size: var(--font-size-base);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .spacer {

@@ -1,11 +1,12 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  IconMenu, IconUser, IconLogout, IconHome, IconSettings, IconUsersGroup, IconChevronDown,
+  IconMenu, IconUser, IconLogout, IconHome, IconSettings, IconUsersGroup,
 } from '@tabler/icons-react';
 import type { User } from 'firebase/auth';
 import { DropdownMenu } from './DropdownMenu';
 import { SportIcon } from './SportIcon';
+import { TitleSwitcher } from './TitleSwitcher';
 import { useTeamSwitcher } from '../../state/TeamSwitcherContext';
 import styles from './AppHeader.module.css';
 
@@ -21,12 +22,8 @@ interface Props {
 export function AppHeader({ user, onSignOut, center, title }: Props) {
   const [navOpen, setNavOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  // 'closing' keeps the menu mounted while it slides back up under the header.
-  const [teamsMenu, setTeamsMenu] = useState<'closed' | 'open' | 'closing'>('closed');
-  const teamsOpen = teamsMenu === 'open';
   const navRef = useRef<HTMLButtonElement>(null);
   const avatarRef = useRef<HTMLButtonElement>(null);
-  const teamsRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const switcher = useTeamSwitcher();
   // Only on a team's pages (`title` set), and only when there's somewhere else to go.
@@ -35,12 +32,6 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
     : [];
 
   const titleText = (title ?? 'Teams').toUpperCase();
-
-  function closeTeams() {
-    // Without the slide there's no animationend to finish the close on.
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    setTeamsMenu(m => (m === 'closed' ? m : reduceMotion ? 'closed' : 'closing'));
-  }
 
   return (
     <header className={styles.header}>
@@ -64,41 +55,20 @@ export function AppHeader({ user, onSignOut, center, title }: Props) {
           />
         )}
       </div>
-      {center ?? (otherTeams.length > 0 ? (
-        <>
-          <button
-            ref={teamsRef}
-            type="button"
-            className={styles.titleButton}
-            onClick={() => (teamsOpen ? closeTeams() : setTeamsMenu('open'))}
-            aria-haspopup="menu"
-            aria-expanded={teamsOpen}
-          >
-            <span className={styles.title}>{titleText}</span>
-            <IconChevronDown size={24} className={[styles.chevron, teamsOpen ? styles.chevronOpen : ''].filter(Boolean).join(' ')} />
-          </button>
-          {teamsMenu !== 'closed' && (
-            <div
-              className={styles.teamMenuClip}
-              onAnimationEnd={() => setTeamsMenu(m => (m === 'closing' ? 'closed' : m))}
-            >
-              <DropdownMenu
-                className={[styles.teamMenu, teamsMenu === 'closing' ? styles.teamMenuClosing : ''].filter(Boolean).join(' ')}
-                triggerRef={teamsRef}
-                onClose={closeTeams}
-                items={otherTeams.map(t => ({
-                  key: t.meta.id,
-                  label: t.meta.name,
-                  icon: <SportIcon sport={t.meta.sport} className={styles.teamIcon} />,
-                  onClick: () => { switcher?.onSelect(t.meta.id); navigate('/'); },
-                }))}
-              />
-            </div>
-          )}
-        </>
-      ) : (
-        <span className={styles.title}>{titleText}</span>
-      ))}
+      {center ?? (
+        <div className={styles.titleSlot}>
+          <TitleSwitcher
+            title={titleText}
+            accentIcons
+            items={otherTeams.map(t => ({
+              key: t.meta.id,
+              label: t.meta.name,
+              icon: <SportIcon sport={t.meta.sport} />,
+              onClick: () => { switcher?.onSelect(t.meta.id); navigate('/'); },
+            }))}
+          />
+        </div>
+      )}
       <div className={styles.avatarWrap}>
         <button ref={avatarRef} type="button" className={styles.avatarButton} onClick={() => setAvatarOpen(o => !o)} title={user.displayName ?? 'Account'}>
           {user.photoURL ? (

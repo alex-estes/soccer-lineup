@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   IconAward, IconStars, IconDiamond, IconHeartHandshake,
-  IconShield, IconSwords, IconUsers, IconHeart, IconStar,
+  IconShield, IconSwords, IconUsers, IconHeart, IconStar, IconUser,
 } from '@tabler/icons-react';
 import { useAppState } from '../../state/AppContext';
 import { getCumulativeStats, getGamesPlayed, statCell, statsColumns } from '../../lib/stats';
@@ -88,7 +88,22 @@ export function PlayerPage() {
 
   return (
     <>
-      <DetailHeader title={player.name} />
+      <DetailHeader
+        title={player.name}
+        switchItems={state.players
+          .filter(p => p.name !== player.name)
+          .map(p => ({
+            key: p.name,
+            label: p.name,
+            icon: <IconUser size={24} />,
+            onClick: () => {
+              // Replace, so going back leaves the player pages rather than stepping
+              // through every player visited.
+              navigate(`/player/${encodeURIComponent(p.name)}`, { replace: true });
+              window.scrollTo(0, 0);
+            },
+          }))}
+      />
       <main className={styles.content}>
         <section className={styles.section}>
           <div className={styles.sectionTitle}>
