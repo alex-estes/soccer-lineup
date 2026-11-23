@@ -143,6 +143,7 @@
 
 .skillPick {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: var(--space-8);
   font-family: var(--font-sans);
@@ -152,16 +153,9 @@
   color: var(--color-text-secondary);
 }
 
-.select {
-  min-height: var(--tap-min);
-  padding: 0 var(--space-8);
-  background: var(--color-bg-base);
-  color: var(--color-text-primary);
-  border: 2px solid var(--color-border-default);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--font-size-sm);
+.skillPick > span {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .codeRow {

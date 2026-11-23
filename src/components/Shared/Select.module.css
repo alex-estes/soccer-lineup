@@ -1,0 +1,69 @@
+/* Positions the menu under the trigger. */
+.wrap {
+  position: relative;
+  min-width: 0;
+}
+
+/* Same box as Button / IconButton: control height, large radius, 2px border. */
+.button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  height: var(--control-height);
+  padding: 0 var(--space-8) 0 var(--space-12);
+  background: transparent;
+  border: 2px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--color-bg-base);
+}
+
+.button[aria-expanded='true'] {
+  border-color: var(--color-brand-primary);
+}
+
+.value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Matches the title switcher's chevron. */
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transition: transform var(--motion-dropdown-duration) var(--motion-easy-ease);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Beats DropdownMenu's grey icon colour (.item:not(.danger) > svg) for the selected item. */
+.menu > button > svg.check {
+  flex-shrink: 0;
+  color: var(--color-brand-primary);
+}
+
+/* Keeps labels aligned with the checked item's. */
+.iconSpacer {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
