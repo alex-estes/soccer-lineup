@@ -59,6 +59,7 @@ export function normalizeSettings(raw: unknown, sport: SportId): TeamSettings {
     useSkillRatings: s.useSkillRatings !== false,
     // Absent on teams saved before the setting existed: on, like a new team.
     strongFinish: s.strongFinish !== false,
+    lineupRules: s.lineupRules !== false,
   };
 }
 

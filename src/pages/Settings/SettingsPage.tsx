@@ -238,14 +238,25 @@ export function SettingsPage({ user, onSignOut }: Props) {
                 />
               </div>
             )}
+            {settings.useSkillRatings && SPORTS[team.sport].lineupRules && (
+              <div className={styles.row}>
+                <span className={styles.label}>Basketball Lineup Rules</span>
+                <Toggle
+                  checked={settings.lineupRules}
+                  onChange={enabled => dispatch({ type: 'SET_LINEUP_RULES', enabled })}
+                  label="Basketball Lineup Rules"
+                />
+              </div>
+            )}
           </div>
-          {settings.useSkillRatings && SPORTS[team.sport].lineupRules && (
+          {settings.useSkillRatings && settings.lineupRules && SPORTS[team.sport].lineupRules && (
             <p className={styles.hint}>
               Every lineup gets a ball handler (Silver or better on offense) and no more than two
               Bronze players, with offense and defense spread evenly across rotations.
             </p>
           )}
-          {settings.useSkillRatings && (settings.strongFinish || SPORTS[team.sport].lineupRules) && (
+          {settings.useSkillRatings
+            && (settings.strongFinish || (settings.lineupRules && SPORTS[team.sport].lineupRules)) && (
             <p className={styles.hint}>
               Everyone still plays the same number of rotations — only when they sit changes.
             </p>

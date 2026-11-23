@@ -239,6 +239,7 @@ export function legacyToTeam(data: LegacyDoc, now = Date.now()): ConvertedTeam {
       rotationCount,
       useSkillRatings: m.settings.useSkillRatings,
       strongFinish: true,
+      lineupRules: true,
     },
     games,
   };

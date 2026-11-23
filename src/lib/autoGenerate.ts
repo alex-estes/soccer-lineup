@@ -168,7 +168,7 @@ function floorViolations(rules: LineupRules, skills: SkillIndex) {
  * When `settings.useSkillRatings` is on it also spreads talent across the position
  * lines, and — with `settings.strongFinish` — puts the strongest group on for the final
  * rotation while evening out the rest (see finishStrong). A sport with lineup rules
- * (basketball) also gets them enforced on every rotation's group — a ball handler on
+ * (basketball), with `settings.lineupRules` on, also gets them enforced on every rotation's group — a ball handler on
  * the floor, a cap on Bronze players — and offense and defense evened out across the
  * game, with or without the strong finish. None of it changes how many rotations anyone
  * plays: it all runs after the playing-time pass and only rearranges it.
@@ -184,7 +184,7 @@ export function autoGenerate(
 
   const posIds = game.positions.map(p => p.id);
   const useSkills = state.settings.useSkillRatings;
-  const rules = useSkills ? SPORTS[state.team.sport].lineupRules : undefined;
+  const rules = useSkills && state.settings.lineupRules ? SPORTS[state.team.sport].lineupRules : undefined;
   const skills = buildSkillIndex(state.players, game.positions, state.team.sport, rules);
 
   const zeroCounts = (): Counts => {

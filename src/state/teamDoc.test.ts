@@ -21,8 +21,10 @@ describe('normalizeTeamDoc', () => {
     // Offense/defense were added later; a stored overall-only player gets them unrated.
     expect(t.players).toEqual([{ name: 'Jo', active: true, skills: { overall: 2, offense: 0, defense: 0 } }]);
     // strongFinish wasn't stored: a team saved before that setting existed gets it on.
-    expect(t.settings).toEqual({ positions: HOOPS, rotationCount: 8, useSkillRatings: true, strongFinish: true });
+    // Nor was lineupRules: on as well.
+    expect(t.settings).toEqual({ positions: HOOPS, rotationCount: 8, useSkillRatings: true, strongFinish: true, lineupRules: true });
     expect(normalizeTeamDoc('t1', { ...raw, settings: { ...raw.settings, strongFinish: false } }).settings.strongFinish).toBe(false);
+    expect(normalizeTeamDoc('t1', { ...raw, settings: { ...raw.settings, lineupRules: false } }).settings.lineupRules).toBe(false);
   });
 
   it('drops duplicate and nameless players instead of letting them collide', () => {
