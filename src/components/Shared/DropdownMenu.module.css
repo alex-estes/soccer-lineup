@@ -8,7 +8,7 @@
   gap: var(--space-4);
   padding: var(--space-4) 0;
   width: max-content;
-  min-width: 160px;
+  min-width: 200px;
   max-width: 280px;
   background: var(--color-bg-surface);
   border: 2px solid var(--color-border-default);
@@ -52,4 +52,11 @@
    still colour an icon itself (the team switcher's teal sport icons). */
 .item:not(.danger) > svg {
   color: var(--color-text-secondary);
+}
+
+.divider {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-top: 2px solid var(--color-border-default);
 }
