@@ -1,0 +1,100 @@
+.title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: var(--font-size-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Title + chevron: the whole area is the tap target. */
+.button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-8);
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transition: transform var(--motion-dropdown-duration) var(--motion-easy-ease);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Positioned against the header (sticky, so it's the containing block), starting just
+   below its 2px bottom border. It clips the menu, so the menu appears to slide out
+   from under the header. The padding leaves room for the 12px gap, the 24px side
+   margins and the menu's shadow; taps pass through the empty parts. */
+.clip {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 12px 24px 32px;
+  pointer-events: none;
+}
+
+/* Spans the page inside the clip's padding, capped to the content column on wide screens. */
+.clip .menu {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  width: auto;
+  max-width: 592px;
+  margin: 0 auto;
+  pointer-events: auto;
+  animation: slideIn var(--motion-dropdown-duration) var(--motion-easy-ease);
+}
+
+.clip .closing {
+  animation: slideOut var(--motion-dropdown-duration) var(--motion-easy-ease) forwards;
+}
+
+/* -100% of its own height, minus the 12px gap, puts it fully behind the header. */
+@keyframes slideIn {
+  from { transform: translateY(calc(-100% - 12px)); }
+  to { transform: none; }
+}
+
+@keyframes slideOut {
+  from { transform: none; }
+  to { transform: translateY(calc(-100% - 12px)); }
+}
+
+.clip .menu > button {
+  gap: var(--space-8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clip .menu.accentIcons svg {
+  flex-shrink: 0;
+  color: var(--color-brand-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+
+  .clip .menu,
+  .clip .closing {
+    animation: none;
+  }
+}

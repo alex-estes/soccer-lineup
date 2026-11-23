@@ -68,6 +68,11 @@
   /* Every page header is exactly this tall (the game header, with its score line, sets
      it). The game page's sticky sub-bar sits right below it. */
   --header-height: 74px;
+
+  /* Header title switchers (team, player): chevron turn and menu slide share these.
+     The curve is After Effects' "Easy Ease" (33% influence in and out). */
+  --motion-dropdown-duration: 200ms;
+  --motion-easy-ease: cubic-bezier(0.333, 0, 0.667, 1);
 }
 
 * {
